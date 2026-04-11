@@ -13,10 +13,10 @@ public abstract class BehringerChannelController
    protected final Receiver midiOut;
    protected final int channel;
 
-   protected boolean enable;
+   protected volatile boolean enable;
 
    private int currentDeviceValue = -1;
-   private int newDeviceValue = -1;
+   private volatile int newDeviceValue = -1;
 
    public BehringerChannelController(SliderboardVariable controlVariable, int channel, Receiver midiOut)
    {
@@ -95,7 +95,7 @@ public abstract class BehringerChannelController
          }
          else
          {
-            int alpha = (value - controlVariable.getMin()) / (controlVariable.getMax() - controlVariable.getMax());
+            int alpha = (value - controlVariable.getMin()) / (controlVariable.getMax() - controlVariable.getMin());
             msgData = (int) Math.round(EuclidCoreTools.interpolate(0, 127, alpha));
          }
          message.setMessage(ShortMessage.CONTROL_CHANGE, 0, channel, msgData);
