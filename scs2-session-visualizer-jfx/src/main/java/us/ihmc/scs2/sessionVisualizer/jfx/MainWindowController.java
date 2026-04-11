@@ -157,6 +157,7 @@ public class MainWindowController extends ObservedAnimationTimer implements Visu
       }
 
       setupViewport3D(toolkit.getGlobalToolkit().getViewport3DManager().getPane());
+      setupViewportVisibility();
       setupPlotter2D(plotter2D);
       messager.addFXTopicListener(topics.getPlotter2DTrackCoordinateRequest(), m ->
       {
@@ -193,6 +194,39 @@ public class MainWindowController extends ObservedAnimationTimer implements Visu
       globalToolkit.getSnapshotManager().registerRecordable(viewportPane);
    }
 
+   private double savedMainGUIPaneDivider = 0.5;
+
+   private void updateTopPaneDivider()
+   {
+      if (mainViewSplitPane.getItems().isEmpty())
+      {
+         savedMainGUIPaneDivider = mainGUIPane.getDividerPositions()[0];
+         mainGUIPane.setDividerPosition(0, 0.0);
+      }
+      else
+      {
+         mainGUIPane.setDividerPosition(0, savedMainGUIPaneDivider);
+      }
+   }
+
+   private void setupViewportVisibility()
+   {
+      Property<Boolean> showViewportProperty = messager.createPropertyInput(topics.getShowViewport(), true);
+      showViewportProperty.addListener((o, oldValue, newValue) ->
+                                       {
+                                          if (newValue)
+                                          {
+                                             if (!mainViewSplitPane.getItems().contains(sceneAnchorPane))
+                                                mainViewSplitPane.getItems().add(0, sceneAnchorPane);
+                                          }
+                                          else
+                                          {
+                                             mainViewSplitPane.getItems().remove(sceneAnchorPane);
+                                          }
+                                          updateTopPaneDivider();
+                                       });
+   }
+
    private Property<Boolean> showOverheadPlotterProperty;
 
    public Property<Boolean> setupPlotter2D(Plotter2D plotter2D)
@@ -218,6 +252,7 @@ public class MainWindowController extends ObservedAnimationTimer implements Visu
                                                  {
                                                     mainViewSplitPane.getItems().remove(pane);
                                                  }
+                                                 updateTopPaneDivider();
                                               });
       return showOverheadPlotterProperty;
    }

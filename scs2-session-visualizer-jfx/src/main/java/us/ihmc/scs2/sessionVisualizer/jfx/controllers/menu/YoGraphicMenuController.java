@@ -28,6 +28,8 @@ public class YoGraphicMenuController implements VisualizerController
    @FXML
    private CheckMenuItem overheadPlotterMenuItem;
    @FXML
+   private CheckMenuItem showViewportMenuItem;
+   @FXML
    private CheckMenuItem showRobotMenuItem, enableWireframeRobotModeMenuItem;
    @FXML
    private CheckMenuItem showTerrainMenuItem, enableWireframeTerrainModeMenuItem;
@@ -48,6 +50,7 @@ public class YoGraphicMenuController implements VisualizerController
       owner = toolkit.getWindow();
 
       messager.bindBidirectional(topics.getShowOverheadPlotter(), overheadPlotterMenuItem.selectedProperty(), false);
+      messager.bindBidirectional(topics.getShowViewport(), showViewportMenuItem.selectedProperty(), true);
       showRobotMenuItem.selectedProperty()
                        .addListener((o, oldValue, newValue) -> messager.submitMessage(topics.getRobotVisualRequest(), visible(ALL_ROBOTS, newValue)));
       enableWireframeRobotModeMenuItem.selectedProperty()

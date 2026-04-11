@@ -9,6 +9,7 @@
       fx:controller="us.ihmc.scs2.sessionVisualizer.jfx.controllers.menu.YoGraphicMenuController">
     <items>
         <CheckMenuItem fx:id="overheadPlotterMenuItem" text="Overhead Plotter"/>
+        <CheckMenuItem fx:id="showViewportMenuItem" text="Show Viewport" selected="true"/>
         <MenuItem onAction="#openPlotter2DOptions" text="Plotter options...">
             <graphic>
                 <FontIcon>

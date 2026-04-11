@@ -40,6 +40,7 @@ public class SessionVisualizerTopics
    private Topic<Object> forgetRecordable;
    private Topic<Boolean> showAdvancedControls;
    private Topic<Boolean> showOverheadPlotter;
+   private Topic<Boolean> showViewport;
    private Topic<NewRobotVisualRequest> robotVisualRequest;
    private Topic<NewTerrainVisualRequest> terrainVisualRequest;
    private Topic<NewWindowRequest> openWindowRequest;
@@ -142,6 +143,7 @@ public class SessionVisualizerTopics
       forgetRecordable = SessionVisualizerMessagerAPI.ForgetRecordable;
       showAdvancedControls = SessionVisualizerMessagerAPI.ShowAdvancedControls;
       showOverheadPlotter = SessionVisualizerMessagerAPI.ShowOverheadPlotter;
+      showViewport = SessionVisualizerMessagerAPI.ShowViewport;
       robotVisualRequest = SessionVisualizerMessagerAPI.RobotVisualRequest;
       terrainVisualRequest = SessionVisualizerMessagerAPI.TerrainVisualRequest;
       openWindowRequest = SessionVisualizerMessagerAPI.OpenWindowRequest;
@@ -276,6 +278,11 @@ public class SessionVisualizerTopics
    public Topic<Boolean> getShowOverheadPlotter()
    {
       return showOverheadPlotter;
+   }
+
+   public Topic<Boolean> getShowViewport()
+   {
+      return showViewport;
    }
 
    public Topic<NewRobotVisualRequest> getRobotVisualRequest()
