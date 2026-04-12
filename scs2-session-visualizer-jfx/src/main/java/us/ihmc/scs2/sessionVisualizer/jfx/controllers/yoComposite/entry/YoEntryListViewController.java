@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.*;
 import us.ihmc.log.LogTools;
@@ -63,7 +64,7 @@ public class YoEntryListViewController
          {
             if (isWithinListReorder(event) && !cell.isEmpty())
             {
-               event.acceptTransferModes(TransferMode.MOVE);
+               event.acceptTransferModes(TransferMode.COPY);
                showCellDropIndicator(cell, event.getY() < cell.getHeight() / 2.0);
                event.consume();
             }
@@ -234,7 +235,7 @@ public class YoEntryListViewController
       if (selectedItems.isEmpty())
          return;
 
-      Dragboard dragBoard = yoEntryListView.startDragAndDrop(TransferMode.COPY_OR_MOVE);
+      Dragboard dragBoard = yoEntryListView.startDragAndDrop(TransferMode.COPY);
       ClipboardContent clipboardContent = new ClipboardContent();
       if (selectedItems.size() == 1)
       {
@@ -347,5 +348,11 @@ public class YoEntryListViewController
 
       items.removeAll(itemsToMove);
       items.addAll(Math.min(adjustedIndex, items.size()), itemsToMove);
+
+      MultipleSelectionModel<YoComposite> selectionModel = yoEntryListView.getSelectionModel();
+      selectionModel.clearSelection();
+      int newStart = Math.min(adjustedIndex, items.size() - itemsToMove.size());
+      for (int i = newStart; i < newStart + itemsToMove.size(); i++)
+         selectionModel.select(i);
    }
 }
