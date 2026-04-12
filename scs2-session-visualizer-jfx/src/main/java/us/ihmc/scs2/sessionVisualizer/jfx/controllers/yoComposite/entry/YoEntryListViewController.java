@@ -3,7 +3,9 @@ package us.ihmc.scs2.sessionVisualizer.jfx.controllers.yoComposite.entry;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.*;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static us.ihmc.scs2.sessionVisualizer.jfx.tools.ListViewTools.removeMenuItemFactory;
 
@@ -53,7 +56,36 @@ public class YoEntryListViewController
 
       yoManager = toolkit.getYoManager();
       yoCompositeSearchManager = toolkit.getYoCompositeSearchManager();
-      yoEntryListView.setCellFactory(param -> new YoCompositeListCell(toolkit.getYoManager(), yoVariableNameDisplay, numberPrecision, param));
+      yoEntryListView.setCellFactory(param ->
+      {
+         YoCompositeListCell cell = new YoCompositeListCell(toolkit.getYoManager(), yoVariableNameDisplay, numberPrecision, param);
+         cell.setOnDragOver(event ->
+         {
+            if (isWithinListReorder(event) && !cell.isEmpty())
+            {
+               event.acceptTransferModes(TransferMode.MOVE);
+               showCellDropIndicator(cell, event.getY() < cell.getHeight() / 2.0);
+               event.consume();
+            }
+         });
+         cell.setOnDragExited(event ->
+         {
+            clearCellDropIndicator(cell);
+            event.consume();
+         });
+         cell.setOnDragDropped(event ->
+         {
+            if (isWithinListReorder(event) && !cell.isEmpty())
+            {
+               int targetIndex = yoEntryListView.getItems().indexOf(cell.getItem());
+               boolean insertBefore = event.getY() < cell.getHeight() / 2.0;
+               reorderItems(new ArrayList<>(yoEntryListView.getSelectionModel().getSelectedIndices()), targetIndex, insertBefore);
+               event.setDropCompleted(true);
+               event.consume();
+            }
+         });
+         return cell;
+      });
       yoEntryListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
       MenuTools.setupContextMenu(yoEntryListView, removeMenuItemFactory(true));
 
@@ -198,11 +230,27 @@ public class YoEntryListViewController
       if (!event.isPrimaryButtonDown())
          return;
 
-      YoComposite yoComposite = yoEntryListView.getSelectionModel().getSelectedItem();
+      List<YoComposite> selectedItems = new ArrayList<>(yoEntryListView.getSelectionModel().getSelectedItems());
+      if (selectedItems.isEmpty())
+         return;
 
-      Dragboard dragBoard = yoEntryListView.startDragAndDrop(TransferMode.COPY);
+      Dragboard dragBoard = yoEntryListView.startDragAndDrop(TransferMode.COPY_OR_MOVE);
       ClipboardContent clipboardContent = new ClipboardContent();
-      clipboardContent.put(DragAndDropTools.YO_COMPOSITE_REFERENCE, Arrays.asList(yoComposite.getPattern().getType(), yoComposite.getFullname()));
+      if (selectedItems.size() == 1)
+      {
+         YoComposite yoComposite = selectedItems.get(0);
+         clipboardContent.put(DragAndDropTools.YO_COMPOSITE_REFERENCE, Arrays.asList(yoComposite.getPattern().getType(), yoComposite.getFullname()));
+      }
+      else
+      {
+         List<String> content = new ArrayList<>();
+         for (YoComposite yoComposite : selectedItems)
+         {
+            content.add(yoComposite.getPattern().getType());
+            content.add(yoComposite.getFullname());
+         }
+         clipboardContent.put(DragAndDropTools.YO_COMPOSITE_LIST_REFERENCE, content);
+      }
       dragBoard.setContent(clipboardContent);
       event.consume();
    }
@@ -268,5 +316,36 @@ public class YoEntryListViewController
          yoEntryListView.setStyle("-fx-border-color:green; -fx-border-radius:5;");
       else
          yoEntryListView.setStyle("-fx-border-color: null;");
+   }
+
+   private boolean isWithinListReorder(DragEvent event)
+   {
+      return event.getGestureSource() == yoEntryListView;
+   }
+
+   private void showCellDropIndicator(ListCell<?> cell, boolean above)
+   {
+      if (above)
+         cell.setStyle("-fx-border-color: #4fc3f7 transparent transparent transparent; -fx-border-width: 2 0 0 0;");
+      else
+         cell.setStyle("-fx-border-color: transparent transparent #4fc3f7 transparent; -fx-border-width: 0 0 2 0;");
+   }
+
+   private void clearCellDropIndicator(ListCell<?> cell)
+   {
+      cell.setStyle(null);
+   }
+
+   private void reorderItems(List<Integer> selectedIndices, int dropIndex, boolean insertBefore)
+   {
+      ObservableList<YoComposite> items = yoEntryListView.getItems();
+      List<YoComposite> itemsToMove = selectedIndices.stream().sorted().map(items::get).collect(Collectors.toList());
+
+      int absoluteDropIndex = insertBefore ? dropIndex : dropIndex + 1;
+      long selectedBeforeDrop = selectedIndices.stream().filter(i -> i < absoluteDropIndex).count();
+      int adjustedIndex = (int) (absoluteDropIndex - selectedBeforeDrop);
+
+      items.removeAll(itemsToMove);
+      items.addAll(Math.min(adjustedIndex, items.size()), itemsToMove);
    }
 }
