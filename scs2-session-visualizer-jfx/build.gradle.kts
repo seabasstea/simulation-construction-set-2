@@ -195,6 +195,66 @@ tasks.register("buildDebianPackage") {
    }
 }
 
+tasks.register("installDistWindows") {
+   dependsOn("installDist")
+
+   doLast {
+      fileTree("${project.projectDir}/build/install/scs2-session-visualizer-jfx/lib").matching {
+         include("*-linux.jar")
+         include("*-linux-*.jar")
+         include("*-android-*")
+         include("*-ios-*")
+         include("*-mac.jar")
+         include("*-mac-*.jar")
+         include("*-macosx-*")
+         include("*-osx-*")
+      }.forEach(File::delete)
+   }
+}
+
+tasks.register("buildWindowsMsiPackage") {
+   dependsOn("installDistWindows")
+
+   doLast {
+      val deploymentFolder = "${project.projectDir}/deployment/windows"
+      File(deploymentFolder).deleteRecursively()
+      File(deploymentFolder).mkdirs()
+
+      val libFolder = "${project.projectDir}/build/install/scs2-session-visualizer-jfx/lib"
+      val jpackage = "${System.getProperty("java.home")}/bin/jpackage.exe"
+      val mainJarName = "scs2-session-visualizer-jfx-${ihmc.version}.jar"
+      // MSI requires x.y.z format; strip the leading Java-major prefix (e.g. "17-" from "17-0.32.0")
+      val appVersion = ihmc.version.replace(Regex("^\\d+-"), "")
+      val iconFile = "${project.projectDir}/src/main/resources/icons/scs-icon.ico"
+
+      // Write the secondary launcher properties file for MCAPRepackApplication
+      val mcapPropsFile = File("${project.projectDir}/build/mcap-launcher.properties")
+      mcapPropsFile.writeText("main-class=us.ihmc.scs2.sessionVisualizer.jfx.session.mcap.MCAPRepackApplication\njava-options=-Dprism.vsync=false\n")
+
+      val args = mutableListOf(
+         jpackage,
+         "--input", libFolder,
+         "--dest", deploymentFolder,
+         "--name", sessionVisualizerExecutableName,
+         "--main-class", "us.ihmc.scs2.sessionVisualizer.jfx.SessionVisualizer",
+         "--main-jar", mainJarName,
+         "--type", "msi",
+         "--app-version", appVersion,
+         "--description", "Session Visualizer for SCS2",
+         "--vendor", "IHMC",
+         "--win-dir-chooser",
+         "--win-menu",
+         "--win-shortcut",
+         "--java-options", "-Dprism.vsync=false",
+         "--add-launcher", "$mcapRepackAppExecutableName=${mcapPropsFile.absolutePath}"
+      )
+      if (File(iconFile).exists())
+         args += listOf("--icon", iconFile)
+
+      ihmc.exec(ProcessBuilder(args))
+   }
+}
+
 fun addVSyncLinuxHackForJavaFXApp(sourceFolder: String, javafxappname: String)
 {
    val launchScriptFile = File("$sourceFolder/bin/$javafxappname")
