@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="SCS2 Session Visualizer"
+           Language="1033"
+           Version="$(var.AppVersion)"
+           Manufacturer="IHMC"
+           UpgradeCode="{2A4C6B8D-3E5F-4A7C-8B9D-1E2F3A4B5C6D}">
+
+    <Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine"/>
+    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed."/>
+    <MediaTemplate EmbedCab="yes"/>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="SCS2SessionVisualizer"/>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="SCS2MenuFolder" Name="SCS2"/>
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop"/>
+    </Directory>
+
+    <Component Id="SCS2MenuShortcut" Guid="{B1C2D3E4-F5A6-7B8C-9D0E-1F2A3B4C5D6E}" Directory="SCS2MenuFolder">
+      <Shortcut Id="SCS2StartMenu" Name="SCS2 Session Visualizer"
+                Target="[INSTALLFOLDER]SCS2SessionVisualizer.exe"
+                WorkingDirectory="INSTALLFOLDER" Icon="SCS2Icon"/>
+      <RegistryValue Root="HKCU" Key="Software\IHMC\SCS2" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+    </Component>
+
+    <Component Id="SCS2DesktopShortcut" Guid="{C2D3E4F5-A6B7-8C9D-0E1F-2A3B4C5D6E7F}" Directory="DesktopFolder">
+      <Shortcut Id="SCS2Desktop" Name="SCS2 Session Visualizer"
+                Target="[INSTALLFOLDER]SCS2SessionVisualizer.exe"
+                WorkingDirectory="INSTALLFOLDER" Icon="SCS2Icon"/>
+      <RegistryValue Root="HKCU" Key="Software\IHMC\SCS2" Name="desktop" Type="integer" Value="1" KeyPath="yes"/>
+    </Component>
+
+    <Component Id="MCAPMenuShortcut" Guid="{D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F90}" Directory="SCS2MenuFolder">
+      <Shortcut Id="MCAPStartMenu" Name="MCAP Repack Application"
+                Target="[INSTALLFOLDER]MCAPRepackApplication.exe"
+                WorkingDirectory="INSTALLFOLDER" Icon="SCS2Icon"/>
+      <RegistryValue Root="HKCU" Key="Software\IHMC\MCAPRepack" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+    </Component>
+
+    <Component Id="CleanupMenuFolder" Guid="{E5F6A7B8-C9D0-1E2F-3A4B-5C6D7E8F9A0B}" Directory="SCS2MenuFolder">
+      <RemoveFolder Id="RemoveSCS2MenuFolder" On="uninstall"/>
+      <RegistryValue Root="HKCU" Key="Software\IHMC\SCS2" Name="menuFolder" Type="integer" Value="1" KeyPath="yes"/>
+    </Component>
+
+    <Feature Id="FeatureSCS2" Title="SCS2 Session Visualizer" Level="1" Absent="disallow"
+             Description="SCS2 Session Visualizer and all required files.">
+      <ComponentGroupRef Id="AppImageFiles"/>
+      <ComponentRef Id="SCS2MenuShortcut"/>
+      <ComponentRef Id="SCS2DesktopShortcut"/>
+      <ComponentRef Id="CleanupMenuFolder"/>
+    </Feature>
+
+    <Feature Id="FeatureMCAP" Title="MCAP Repack Application" Level="10"
+             Description="Optional utility to repair corrupted MCAP robot log files.">
+      <ComponentRef Id="MCAPMenuShortcut"/>
+    </Feature>
+
+    <Icon Id="SCS2Icon" SourceFile="$(var.IconFile)"/>
+    <Property Id="ARPPRODUCTICON" Value="SCS2Icon"/>
+
+    <!-- WixUI_FeatureTree without license dialog -->
+    <UI>
+      <UIRef Id="WixUI_FeatureTree"/>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="CustomizeDlg" Order="99">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="99">1</Publish>
+    </UI>
+
+  </Product>
+</Wix>

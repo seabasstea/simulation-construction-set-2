@@ -223,35 +223,67 @@ tasks.register("buildWindowsMsiPackage") {
       val libFolder = "${project.projectDir}/build/install/scs2-session-visualizer-jfx/lib"
       val jpackage = "${System.getProperty("java.home")}/bin/jpackage.exe"
       val mainJarName = "scs2-session-visualizer-jfx-${ihmc.version}.jar"
-      // MSI requires x.y.z format; strip the leading Java-major prefix (e.g. "17-" from "17-0.32.0")
+      // MSI requires x.y.z format; strip the leading Java-major prefix (e.g. "17-" from "17-0.33.0")
       val appVersion = ihmc.version.replace(Regex("^\\d+-"), "")
       val iconFile = "${project.projectDir}/src/main/resources/icons/scs-icon.ico"
+      val wixBin = (System.getenv("WIX")?.trimEnd('\\')
+         ?: File("C:\\Program Files (x86)").listFiles()
+               ?.firstOrNull { it.name.startsWith("WiX Toolset") }
+               ?.absolutePath
+         ?: throw GradleException("WiX Toolset not found. Install WiX 3.x from https://github.com/wixtoolset/wix3/releases")) + "\\bin"
 
-      // Write the secondary launcher properties file for MCAPRepackApplication
+      // Phase 1: jpackage app-image (bundles JRE + both launchers into a directory)
+      val appImageRoot = "${project.projectDir}/build/windows-app-image"
+      File(appImageRoot).deleteRecursively()
       val mcapPropsFile = File("${project.projectDir}/build/mcap-launcher.properties")
       mcapPropsFile.writeText("main-class=us.ihmc.scs2.sessionVisualizer.jfx.session.mcap.MCAPRepackApplication\njava-options=-Dprism.vsync=false\n")
-
-      val args = mutableListOf(
+      ihmc.exec(ProcessBuilder(
          jpackage,
+         "--type", "app-image",
          "--input", libFolder,
-         "--dest", deploymentFolder,
+         "--dest", appImageRoot,
          "--name", sessionVisualizerExecutableName,
          "--main-class", "us.ihmc.scs2.sessionVisualizer.jfx.SessionVisualizer",
          "--main-jar", mainJarName,
-         "--type", "msi",
-         "--app-version", appVersion,
-         "--description", "Session Visualizer for SCS2",
-         "--vendor", "IHMC",
-         "--win-dir-chooser",
-         "--win-menu",
-         "--win-shortcut",
          "--java-options", "-Dprism.vsync=false",
-         "--add-launcher", "$mcapRepackAppExecutableName=${mcapPropsFile.absolutePath}"
-      )
-      if (File(iconFile).exists())
-         args += listOf("--icon", iconFile)
+         "--add-launcher", "$mcapRepackAppExecutableName=${mcapPropsFile.absolutePath}",
+         "--icon", iconFile
+      ))
 
-      ihmc.exec(ProcessBuilder(args))
+      // Phase 2: harvest app-image files with heat.exe
+      val appImageDir = "$appImageRoot\\$sessionVisualizerExecutableName"
+      val harvestWxs = "${project.projectDir}/build/AppImageFiles.wxs"
+      ihmc.exec(ProcessBuilder(
+         "$wixBin\\heat.exe", "dir", appImageDir,
+         "-out", harvestWxs,
+         "-cg", "AppImageFiles",
+         "-dr", "INSTALLFOLDER",
+         "-ke", "-srd", "-sreg", "-gg",
+         "-var", "var.AppImageDir"
+      ))
+
+      // Phase 3: compile WiX sources
+      val wixObjDir = "${project.projectDir}/build/wix-obj"
+      File(wixObjDir).mkdirs()
+      val wxsTemplate = "${project.projectDir}/src/main/wix/SCS2SessionVisualizer.wxs"
+      ihmc.exec(ProcessBuilder(
+         "$wixBin\\candle.exe",
+         "-out", "$wixObjDir\\",
+         "-dAppVersion=$appVersion",
+         "-dIconFile=$iconFile",
+         "-dAppImageDir=$appImageDir",
+         wxsTemplate, harvestWxs
+      ))
+
+      // Phase 4: link MSI with WiX UI extension for feature selection dialog
+      val msiFile = "$deploymentFolder\\${sessionVisualizerExecutableName}-${appVersion}.msi"
+      ihmc.exec(ProcessBuilder(
+         "$wixBin\\light.exe",
+         "-ext", "WixUIExtension",
+         "-out", msiFile,
+         "$wixObjDir\\SCS2SessionVisualizer.wixobj",
+         "$wixObjDir\\AppImageFiles.wixobj"
+      ))
    }
 }
 
