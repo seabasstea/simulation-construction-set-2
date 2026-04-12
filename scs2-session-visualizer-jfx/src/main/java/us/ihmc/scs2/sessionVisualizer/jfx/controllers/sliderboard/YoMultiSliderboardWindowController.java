@@ -98,6 +98,7 @@ public class YoMultiSliderboardWindowController
                                  exportTabMenuItemFactory(),
                                  exportAllTabMenuItemFactory(),
                                  importTabMenuItemFactory());
+      sliderboardTabPane.tabDragPolicyProperty().setValue(TabPane.TabDragPolicy.REORDER);
 
       Menu fileMenu = new Menu("Import/Export");
 

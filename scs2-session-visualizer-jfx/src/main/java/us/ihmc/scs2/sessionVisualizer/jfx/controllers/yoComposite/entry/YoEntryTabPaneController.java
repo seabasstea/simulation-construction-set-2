@@ -66,6 +66,7 @@ public class YoEntryTabPaneController
                                  exportTabMenuItemFactory(),
                                  exportAllTabMenuItemFactory(),
                                  importTabMenuItemFactory());
+      yoEntryTabPane.tabDragPolicyProperty().setValue(TabPane.TabDragPolicy.REORDER);
 
       yoEntryTabPane.getTabs().addListener((ListChangeListener<Tab>) change ->
       {
