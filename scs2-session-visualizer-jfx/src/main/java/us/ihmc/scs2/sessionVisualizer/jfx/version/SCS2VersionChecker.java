@@ -8,6 +8,7 @@ import okhttp3.Response;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 /**
  * This class is used to check if the current version of SCS2 is the latest one.
@@ -40,14 +41,16 @@ public class SCS2VersionChecker
 
    public static final URL REPOSITORY_URL;
    public static final URL DOWNLOAD_URL;
+   public static final URL UPSTREAM_REPOSITORY_URL;
 
    static
    {
       try
       {
-         REPOSITORY_API_URL = new URL("https://api.github.com/repos/ihmcrobotics/simulation-construction-set-2/releases/latest");
-         REPOSITORY_URL = new URL("https://www.github.com/ihmcrobotics/simulation-construction-set-2");
-         DOWNLOAD_URL = new URL("https://github.com/ihmcrobotics/simulation-construction-set-2/releases/latest");
+         REPOSITORY_API_URL = new URL("https://api.github.com/repos/seabasstea/simulation-construction-set-2/releases/latest");
+         REPOSITORY_URL = new URL("https://www.github.com/seabasstea/simulation-construction-set-2");
+         DOWNLOAD_URL = new URL("https://github.com/seabasstea/simulation-construction-set-2/releases/latest");
+         UPSTREAM_REPOSITORY_URL = new URL("https://www.github.com/ihmcrobotics/simulation-construction-set-2");
       }
       catch (MalformedURLException e)
       {
@@ -71,6 +74,16 @@ public class SCS2VersionChecker
          CURRENT_BASE_VERSION = version == null ? "[source-code-version]" : toBaseVersion(version);
       }
       return CURRENT_BASE_VERSION;
+   }
+
+   /**
+    * Returns whether the application is running from source code (not from an installed package).
+    *
+    * @return {@code true} if running from source, {@code false} if running from an installed package.
+    */
+   public static boolean isRunningFromSource()
+   {
+      return "[source-code-version]".equals(getCurrentBaseVersion());
    }
 
    /**
@@ -116,7 +129,9 @@ public class SCS2VersionChecker
    {
       if (LATEST_BASE_VERSION == null)
       {
-         LATEST_BASE_VERSION = toBaseVersion(getLatestRelease().tag_name);
+         Release release = getLatestRelease();
+         if (release != null && release.tag_name != null)
+            LATEST_BASE_VERSION = toBaseVersion(release.tag_name);
       }
       return LATEST_BASE_VERSION;
    }
@@ -127,31 +142,98 @@ public class SCS2VersionChecker
    }
 
    /**
+    * Returns the URL of the latest MSI asset from the GitHub release, or {@code null} if not found.
+    */
+   public static String getLatestMsiAssetUrl()
+   {
+      Release release = getLatestRelease();
+      if (release == null || release.assets == null)
+         return null;
+
+      for (Asset asset : release.assets)
+      {
+         if (asset.name != null && asset.name.toLowerCase().endsWith(".msi"))
+            return asset.browser_download_url;
+      }
+      return null;
+   }
+
+   /**
+    * Clears the cached release data so the next call to {@link #getLatestRelease()} fetches fresh data.
+    */
+   public static void resetCache()
+   {
+      LATEST_RELEASE = null;
+      LATEST_BASE_VERSION = null;
+   }
+
+   /**
     * Returns whether the current version of SCS2 is the latest one.
     * <p>
-    * The current version is retrieved from the MANIFEST.MF file.
-    * </p>
-    * <p>
-    * The latest version is retrieved from the GitHub API.
+    * Uses numeric version comparison (e.g. 0.33.0 &gt; 0.32.1).
     * </p>
     *
-    * @return {@code true} if the current version of SCS2 is the latest one, {@code false} otherwise.
+    * @return {@code true} if the current version is greater than or equal to the latest, {@code false} otherwise.
     */
    public static boolean isLatestRelease()
    {
-      return getCurrentBaseVersion().equals(getLatestBaseVersion());
+      String current = getCurrentBaseVersion();
+      String latest = getLatestBaseVersion();
+      if (current == null || latest == null)
+         return true; // assume up-to-date if we can't check
+      return compareVersions(current, latest) >= 0;
+   }
+
+   /**
+    * Compares two version strings numerically (e.g. "0.33.0" vs "0.32.1").
+    *
+    * @return positive if a &gt; b, negative if a &lt; b, zero if equal.
+    */
+   static int compareVersions(String a, String b)
+   {
+      String[] partsA = a.split("\\.");
+      String[] partsB = b.split("\\.");
+      int length = Math.max(partsA.length, partsB.length);
+
+      for (int i = 0; i < length; i++)
+      {
+         int numA = i < partsA.length ? parseSegment(partsA[i]) : 0;
+         int numB = i < partsB.length ? parseSegment(partsB[i]) : 0;
+         if (numA != numB)
+            return numA - numB;
+      }
+      return 0;
+   }
+
+   private static int parseSegment(String segment)
+   {
+      try
+      {
+         return Integer.parseInt(segment.trim());
+      }
+      catch (NumberFormatException e)
+      {
+         return 0;
+      }
+   }
+
+   public static class Asset
+   {
+      public String name;
+      public String browser_download_url;
    }
 
    public static class Release
    {
       private String tag_name;
       private String html_url;
+      private List<Asset> assets;
    }
 
    /**
     * Converts a version string to its base version.
     * <p>
-    * For example, {@code "17-0.0.1"} is converted to {@code "0.0.1"}.
+    * For example, {@code "17-0.0.1"} is converted to {@code "0.0.1"}, and {@code "v17-0.0.1"} is also converted to {@code "0.0.1"}.
     * </p>
     *
     * @param version the version to convert.
@@ -159,7 +241,10 @@ public class SCS2VersionChecker
     */
    private static String toBaseVersion(String version)
    {
-      // Later replace these with regex to be more robust.
-      return version.replace("17-", "").replace("-java-17", "").trim();
+      String result = version.trim();
+      if (result.startsWith("v"))
+         result = result.substring(1);
+      result = result.replace("17-", "").replace("-java-17", "");
+      return result;
    }
 }

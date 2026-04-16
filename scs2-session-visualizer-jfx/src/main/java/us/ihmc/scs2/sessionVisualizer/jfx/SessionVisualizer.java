@@ -54,6 +54,7 @@ import us.ihmc.scs2.sessionVisualizer.jfx.properties.YoLongProperty;
 import us.ihmc.scs2.sessionVisualizer.jfx.tools.JavaFXApplicationCreator;
 import us.ihmc.scs2.sessionVisualizer.jfx.tools.JavaFXMissingTools;
 import us.ihmc.scs2.sessionVisualizer.jfx.tools.SCS2JavaFXMessager;
+import us.ihmc.scs2.sessionVisualizer.jfx.version.SCS2VersionChecker;
 import us.ihmc.yoVariables.exceptions.IllegalOperationException;
 
 import java.net.URL;
@@ -260,6 +261,45 @@ public class SessionVisualizer
       SessionVisualizerControls controls = startSessionVisualizer(argsHandler.getSession(), true);
       // When running as remote visualizer, some non-daemon threads are not cleaned up properly.
       controls.addVisualizerShutdownListener(() -> System.exit(0));
+
+      if (!SCS2VersionChecker.isRunningFromSource())
+      {
+         Thread updateCheckThread = new Thread(() ->
+         {
+            try
+            {
+               if (!SCS2VersionChecker.isLatestRelease())
+               {
+                  Platform.runLater(() ->
+                  {
+                     try
+                     {
+                        FXMLLoader loader = new FXMLLoader(SessionVisualizerIOTools.UPDATE_WINDOW_URL);
+                        loader.load();
+                        UpdateWindowController controller = loader.getController();
+                        controller.populateVersionLabels();
+                        Window owner = controls.getPrimaryGUIWindow();
+                        Stage updateStage = controller.getStage();
+                        SessionVisualizerIOTools.addSCSIconToWindow(updateStage);
+                        updateStage.initOwner(owner);
+                        updateStage.show();
+                        JavaFXMissingTools.centerWindowInOwner(updateStage, owner);
+                     }
+                     catch (Exception e)
+                     {
+                        e.printStackTrace();
+                     }
+                  });
+               }
+            }
+            catch (Exception e)
+            {
+               // Silently ignore update check failures on startup
+            }
+         });
+         updateCheckThread.setDaemon(true);
+         updateCheckThread.start();
+      }
    }
 
    public static SessionVisualizerControls startSessionVisualizer()

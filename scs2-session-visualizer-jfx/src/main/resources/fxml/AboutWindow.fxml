@@ -52,14 +52,17 @@
                                  <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
                                  <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
                                  <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
+                                 <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="SOMETIMES" />
                               </rowConstraints>
                               <children>
                                             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="GitHub repository:" GridPane.rowIndex="1" />
-                                 <Hyperlink fx:id="repositoryLink" onAction="#openRepositoryURL" text="https://www.github.com/ihmcrobotics/simulation-construction-set-2" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                 <Hyperlink fx:id="repositoryLink" onAction="#openRepositoryURL" text="https://www.github.com/seabasstea/simulation-construction-set-2" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Latest version:" />
                                  <Text fx:id="lastestVersionText" strokeType="OUTSIDE" strokeWidth="0.0" text="VERSION" GridPane.columnIndex="1" />
                                             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Download page:" GridPane.rowIndex="2" />
-                                 <Hyperlink fx:id="downloadLink" onAction="#openDownloadPageURL" text="https://github.com/ihmcrobotics/simulation-construction-set-2/releases/latest" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                 <Hyperlink fx:id="downloadLink" onAction="#openDownloadPageURL" text="https://github.com/seabasstea/simulation-construction-set-2/releases/latest" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Forked from:" GridPane.rowIndex="3" />
+                                 <Hyperlink fx:id="upstreamLink" onAction="#openUpstreamURL" text="https://www.github.com/ihmcrobotics/simulation-construction-set-2" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                               </children>
                               <VBox.margin>
                                  <Insets left="10.0" />

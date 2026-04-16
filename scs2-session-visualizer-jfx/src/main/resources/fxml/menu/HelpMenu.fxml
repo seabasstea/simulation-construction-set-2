@@ -6,8 +6,8 @@
 <Menu fx:id="menu" text="Help" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="us.ihmc.scs2.sessionVisualizer.jfx.controllers.menu.HelpMenuController">
     <items>
-        <MenuItem onAction="#openAboutDialog" text="About...">
-        </MenuItem>
+        <MenuItem onAction="#checkForUpdates" text="Check for Updates..."/>
+        <MenuItem onAction="#openAboutDialog" text="About..."/>
     </items>
     <graphic>
         <FontIcon iconLiteral="fa-question-circle"/>

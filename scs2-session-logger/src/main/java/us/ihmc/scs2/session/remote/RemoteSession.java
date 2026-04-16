@@ -143,6 +143,8 @@ public class RemoteSession extends Session
 
    public void receivedTimestampAndData(long timestamp)
    {
+      serverTimestamp.set(timestamp);
+
       if (!hasSessionStarted() || getActiveMode() != SessionMode.RUNNING)
          return;
 

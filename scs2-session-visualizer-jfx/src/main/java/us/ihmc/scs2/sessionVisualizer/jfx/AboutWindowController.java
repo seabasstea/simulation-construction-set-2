@@ -23,6 +23,8 @@ public class AboutWindowController implements VisualizerController
    private Text lastestVersionText;
    @FXML
    private Hyperlink downloadLink;
+   @FXML
+   private Hyperlink upstreamLink;
 
    @Override
    public void initialize(SessionVisualizerWindowToolkit toolkit)
@@ -41,6 +43,8 @@ public class AboutWindowController implements VisualizerController
 
       downloadLink.setText(SCS2VersionChecker.DOWNLOAD_URL.toString());
 
+      upstreamLink.setText(SCS2VersionChecker.UPSTREAM_REPOSITORY_URL.toString());
+
       stage.show();
       JavaFXMissingTools.centerWindowInOwner(stage, toolkit.getWindow());
    }
@@ -54,5 +58,11 @@ public class AboutWindowController implements VisualizerController
    public void openRepositoryURL(ActionEvent actionEvent)
    {
       SessionVisualizerIOTools.openWebpage(SCS2VersionChecker.REPOSITORY_URL);
+   }
+
+   @FXML
+   public void openUpstreamURL()
+   {
+      SessionVisualizerIOTools.openWebpage(SCS2VersionChecker.UPSTREAM_REPOSITORY_URL);
    }
 }
