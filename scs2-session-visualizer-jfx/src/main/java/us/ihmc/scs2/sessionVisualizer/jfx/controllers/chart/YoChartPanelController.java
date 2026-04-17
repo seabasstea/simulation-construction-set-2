@@ -118,7 +118,7 @@ public class YoChartPanelController extends ObservedAnimationTimer implements Vi
       legendPrecision = messager.createPropertyInput(topics.getControlsNumberPrecision(), 5);
 
       dynamicLineChart = new DynamicLineChart(new FastNumberAxis(0.0, 0.0),
-                                              new FastNumberAxis(),
+                                              FastAxisBase.wrap(new NumberAxis()),
                                               backgroundExecutorManager::executeInBackground,
                                               toolkit.getChartRenderManager());
       dynamicLineChart.markerAutoUpdateProperty().set(false);

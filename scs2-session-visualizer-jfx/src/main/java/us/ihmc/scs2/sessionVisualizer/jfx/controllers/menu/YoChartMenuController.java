@@ -20,7 +20,7 @@ public class YoChartMenuController implements VisualizerController
    private JavaFXMessager messager;
    private Window owner;
 
-   private boolean isYAxisVisible = false;
+   private boolean isYAxisVisible = true;
 
    @FXML
    private MenuItem toggleYAxisMenuItem;
