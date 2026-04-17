@@ -11,10 +11,14 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.geometry.Side;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.chart.FastAxisBase;
+import javafx.scene.layout.Region;
+import javafx.scene.text.Text;
 import us.ihmc.javaFXExtensions.chart.DynamicXYChart;
 import us.ihmc.scs2.sessionVisualizer.jfx.managers.ChartRenderManager;
 
@@ -211,6 +215,33 @@ public class DynamicLineChart extends DynamicXYChart
       updateSeriesList(top, left, width, height);
       if (markerAutoUpdateProperty.get())
          updateMarkers();
+
+      clampYAxisLabels();
+   }
+
+   private void clampYAxisLabels()
+   {
+      FastAxisBase yAxisBase = getYAxis();
+      if (yAxisBase == null)
+         return;
+
+      Region axisRegion = yAxisBase.asRegion();
+      double axisHeight = axisRegion.getHeight();
+
+      for (Node child : axisRegion.getChildrenUnmodifiable())
+      {
+         if (child instanceof Text)
+         {
+            Text text = (Text) child;
+            text.setTranslateY(0);
+            Bounds bounds = text.getBoundsInParent();
+
+            if (bounds.getMinY() < 0)
+               text.setTranslateY(-bounds.getMinY());
+            else if (bounds.getMaxY() > axisHeight)
+               text.setTranslateY(axisHeight - bounds.getMaxY());
+         }
+      }
    }
 
    public void updateMarkers()

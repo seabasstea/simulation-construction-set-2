@@ -885,4 +885,5 @@ public class YoChartPanelController extends ObservedAnimationTimer implements Vi
          chartData.removeCaller(callerID);
       }
    }
+
 }
