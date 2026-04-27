@@ -12,6 +12,7 @@
         <fx:include fx:id="yoChartMenu" source="YoChartMenu.fxml"/>
         <fx:include fx:id="yoGraphicMenu" source="YoGraphicMenu.fxml"/>
         <fx:include fx:id="yoSliderboardMenu" source="YoSliderboardMenu.fxml"/>
+        <fx:include fx:id="viewMenu" source="ViewMenu.fxml"/>
         <fx:include fx:id="helpMenu" source="HelpMenu.fxml"/>
     </menus>
 </MenuBar>

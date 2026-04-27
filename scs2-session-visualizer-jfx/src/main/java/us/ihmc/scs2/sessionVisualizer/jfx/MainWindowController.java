@@ -9,7 +9,6 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
@@ -17,8 +16,6 @@ import javafx.scene.Node;
 import javafx.scene.SubScene;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -158,6 +155,7 @@ public class MainWindowController extends ObservedAnimationTimer implements Visu
 
       setupViewport3D(toolkit.getGlobalToolkit().getViewport3DManager().getPane());
       setupViewportVisibility();
+      setupSidebarVisibility();
       setupPlotter2D(plotter2D);
       messager.addFXTopicListener(topics.getPlotter2DTrackCoordinateRequest(), m ->
       {
@@ -207,6 +205,12 @@ public class MainWindowController extends ObservedAnimationTimer implements Visu
       {
          mainGUIPane.setDividerPosition(0, savedMainGUIPaneDivider);
       }
+   }
+
+   private void setupSidebarVisibility()
+   {
+      messager.bindBidirectional(topics.getShowLeftSidebar(), leftDrawerOpen, false);
+      messager.bindBidirectional(topics.getShowRightSidebar(), rightDrawerOpen, false);
    }
 
    private void setupViewportVisibility()
@@ -317,16 +321,6 @@ public class MainWindowController extends ObservedAnimationTimer implements Visu
       drawer.setSidePane(drawerSidePane);
 
       Node remove = drawer.getChildren().remove(drawer.getChildren().size() - 1);
-      rootPane.addEventHandler(KeyEvent.KEY_PRESSED, (EventHandler<? super KeyEvent>) e ->
-      {
-         if (e.isConsumed())
-            return;
-         if (e.getCode() == KeyCode.ESCAPE && drawer.isOpened())
-         {
-            drawer.close();
-            e.consume();
-         }
-      });
       drawer.setResizeContent(true);
       drawer.setResizableOnDrag(true);
       drawer.setOverLayVisible(false);

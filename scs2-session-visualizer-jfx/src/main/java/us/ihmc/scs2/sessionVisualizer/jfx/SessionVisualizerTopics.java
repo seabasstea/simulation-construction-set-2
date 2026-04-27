@@ -41,6 +41,8 @@ public class SessionVisualizerTopics
    private Topic<Boolean> showAdvancedControls;
    private Topic<Boolean> showOverheadPlotter;
    private Topic<Boolean> showViewport;
+   private Topic<Boolean> showLeftSidebar;
+   private Topic<Boolean> showRightSidebar;
    private Topic<NewRobotVisualRequest> robotVisualRequest;
    private Topic<NewTerrainVisualRequest> terrainVisualRequest;
    private Topic<NewWindowRequest> openWindowRequest;
@@ -144,6 +146,8 @@ public class SessionVisualizerTopics
       showAdvancedControls = SessionVisualizerMessagerAPI.ShowAdvancedControls;
       showOverheadPlotter = SessionVisualizerMessagerAPI.ShowOverheadPlotter;
       showViewport = SessionVisualizerMessagerAPI.ShowViewport;
+      showLeftSidebar = SessionVisualizerMessagerAPI.ShowLeftSidebar;
+      showRightSidebar = SessionVisualizerMessagerAPI.ShowRightSidebar;
       robotVisualRequest = SessionVisualizerMessagerAPI.RobotVisualRequest;
       terrainVisualRequest = SessionVisualizerMessagerAPI.TerrainVisualRequest;
       openWindowRequest = SessionVisualizerMessagerAPI.OpenWindowRequest;
@@ -283,6 +287,16 @@ public class SessionVisualizerTopics
    public Topic<Boolean> getShowViewport()
    {
       return showViewport;
+   }
+
+   public Topic<Boolean> getShowLeftSidebar()
+   {
+      return showLeftSidebar;
+   }
+
+   public Topic<Boolean> getShowRightSidebar()
+   {
+      return showRightSidebar;
    }
 
    public Topic<NewRobotVisualRequest> getRobotVisualRequest()
