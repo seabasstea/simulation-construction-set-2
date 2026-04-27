@@ -6,6 +6,7 @@ public class YoEntryDefinition
 {
    private String compositeType;
    private String compositeFullname;
+   private boolean divider;
 
    public YoEntryDefinition()
    {
@@ -34,6 +35,12 @@ public class YoEntryDefinition
       this.compositeFullname = compositeFullname;
    }
 
+   @XmlElement
+   public void setDivider(boolean divider)
+   {
+      this.divider = divider;
+   }
+
    public String getCompositeType()
    {
       return compositeType;
@@ -42,6 +49,11 @@ public class YoEntryDefinition
    public String getCompositeFullname()
    {
       return compositeFullname;
+   }
+
+   public boolean isDivider()
+   {
+      return divider;
    }
 
    @Override
@@ -55,6 +67,8 @@ public class YoEntryDefinition
       {
          YoEntryDefinition other = (YoEntryDefinition) object;
 
+         if (divider != other.divider)
+            return false;
          if (compositeType == null ? other.compositeType != null : !compositeType.equals(other.compositeType))
             return false;
          if (compositeFullname == null ? other.compositeFullname != null : !compositeFullname.equals(other.compositeFullname))
@@ -70,6 +84,8 @@ public class YoEntryDefinition
    @Override
    public String toString()
    {
+      if (divider)
+         return "divider";
       return "type: " + compositeType + ", fullname: " + compositeFullname;
    }
 }

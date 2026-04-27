@@ -7,9 +7,11 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.*;
+import org.kordamp.ikonli.javafx.FontIcon;
 import us.ihmc.log.LogTools;
 import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.javafx.JavaFXMessager;
@@ -17,7 +19,6 @@ import us.ihmc.scs2.definition.yoEntry.YoEntryDefinition;
 import us.ihmc.scs2.definition.yoEntry.YoEntryListDefinition;
 import us.ihmc.scs2.sessionVisualizer.jfx.SessionVisualizerTopics;
 import us.ihmc.scs2.sessionVisualizer.jfx.YoNameDisplay;
-import us.ihmc.scs2.sessionVisualizer.jfx.controllers.yoComposite.search.YoCompositeListCell;
 import us.ihmc.scs2.sessionVisualizer.jfx.managers.SessionVisualizerToolkit;
 import us.ihmc.scs2.sessionVisualizer.jfx.managers.YoCompositeSearchManager;
 import us.ihmc.scs2.sessionVisualizer.jfx.managers.YoManager;
@@ -26,12 +27,16 @@ import us.ihmc.scs2.sessionVisualizer.jfx.tools.MenuTools;
 import us.ihmc.scs2.sessionVisualizer.jfx.yoComposite.YoComposite;
 import us.ihmc.scs2.sessionVisualizer.jfx.yoComposite.YoCompositeCollection;
 import us.ihmc.scs2.sessionVisualizer.jfx.yoComposite.YoCompositePattern;
+import us.ihmc.scs2.sessionVisualizer.jfx.yoComposite.YoDividerEntryItem;
+import us.ihmc.scs2.sessionVisualizer.jfx.yoComposite.YoEntryItem;
+import us.ihmc.scs2.sessionVisualizer.jfx.yoComposite.YoVariableEntryItem;
 import us.ihmc.yoVariables.variable.YoVariable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static us.ihmc.scs2.sessionVisualizer.jfx.tools.ListViewTools.removeMenuItemFactory;
@@ -39,7 +44,7 @@ import static us.ihmc.scs2.sessionVisualizer.jfx.tools.ListViewTools.removeMenuI
 public class YoEntryListViewController
 {
    @FXML
-   private ListView<YoComposite> yoEntryListView;
+   private ListView<YoEntryItem> yoEntryListView;
 
    private final StringProperty nameProperty = new SimpleStringProperty(this, "name", null);
    private YoManager yoManager;
@@ -59,7 +64,7 @@ public class YoEntryListViewController
       yoCompositeSearchManager = toolkit.getYoCompositeSearchManager();
       yoEntryListView.setCellFactory(param ->
       {
-         YoCompositeListCell cell = new YoCompositeListCell(toolkit.getYoManager(), yoVariableNameDisplay, numberPrecision, param);
+         YoEntryListCell cell = new YoEntryListCell(toolkit.getYoManager(), yoVariableNameDisplay, numberPrecision, param);
          cell.setOnDragOver(event ->
          {
             if (isWithinListReorder(event) && !cell.isEmpty())
@@ -88,7 +93,10 @@ public class YoEntryListViewController
          return cell;
       });
       yoEntryListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-      MenuTools.setupContextMenu(yoEntryListView, removeMenuItemFactory(true));
+      MenuTools.setupContextMenu(yoEntryListView,
+                                 addDividerAboveMenuItemFactory(),
+                                 addDividerBelowMenuItemFactory(),
+                                 removeMenuItemFactory(true));
 
       yoEntryListView.setOnDragDetected(this::handleDragDetected);
       yoEntryListView.setOnDragEntered(this::handleDragEntered);
@@ -102,10 +110,13 @@ public class YoEntryListViewController
 
       yoEntryListView.getSelectionModel().selectedItemProperty().addListener((o, oldValue, newValue) ->
                                                                              {
-                                                                                if (newValue != null)
+                                                                                if (newValue instanceof YoVariableEntryItem variableItem)
+                                                                                {
+                                                                                   YoComposite composite = variableItem.getComposite();
                                                                                    messager.submitMessage(yoCompositeSelectedTopic,
-                                                                                                          Arrays.asList(newValue.getPattern().getType(),
-                                                                                                                        newValue.getFullname()));
+                                                                                                          Arrays.asList(composite.getPattern().getType(),
+                                                                                                                        composite.getFullname()));
+                                                                                }
                                                                              });
    }
 
@@ -126,6 +137,12 @@ public class YoEntryListViewController
 
       for (YoEntryDefinition entry : yoEntries)
       {
+         if (entry.isDivider())
+         {
+            yoEntryListView.getItems().add(new YoDividerEntryItem());
+            continue;
+         }
+
          String type = entry.getCompositeType();
          String fullname = entry.getCompositeFullname();
 
@@ -144,16 +161,16 @@ public class YoEntryListViewController
 
          YoComposite yoComposite = collection.getYoCompositeFromFullname(fullname);
 
-         if (yoComposite != null && !yoEntryListView.getItems().contains(yoComposite))
+         if (yoComposite != null && !containsComposite(yoComposite))
          {
-            yoEntryListView.getItems().add(yoComposite);
+            yoEntryListView.getItems().add(new YoVariableEntryItem(yoComposite));
             continue;
          }
 
          yoComposite = collection.getYoCompositeFromUniqueName(fullname);
-         if (yoComposite != null && !yoEntryListView.getItems().contains(yoComposite))
+         if (yoComposite != null && !containsComposite(yoComposite))
          {
-            yoEntryListView.getItems().add(yoComposite);
+            yoEntryListView.getItems().add(new YoVariableEntryItem(yoComposite));
             continue;
          }
 
@@ -165,9 +182,9 @@ public class YoEntryListViewController
             if (variable != null)
             {
                yoComposite = collection.getYoCompositeFromFullname(variable.getFullNameString());
-               if (yoComposite != null && !yoEntryListView.getItems().contains(yoComposite))
+               if (yoComposite != null && !containsComposite(yoComposite))
                {
-                  yoEntryListView.getItems().add(yoComposite);
+                  yoEntryListView.getItems().add(new YoVariableEntryItem(yoComposite));
                   continue;
                }
             }
@@ -182,11 +199,19 @@ public class YoEntryListViewController
       definition.setName(nameProperty.get());
       definition.setYoEntries(new ArrayList<>());
 
-      for (YoComposite entry : yoEntryListView.getItems())
+      for (YoEntryItem item : yoEntryListView.getItems())
       {
          YoEntryDefinition yoEntryDefinition = new YoEntryDefinition();
-         yoEntryDefinition.setCompositeType(entry.getPattern().getType());
-         yoEntryDefinition.setCompositeFullname(entry.getFullname());
+         if (item.isDivider())
+         {
+            yoEntryDefinition.setDivider(true);
+         }
+         else
+         {
+            YoComposite composite = ((YoVariableEntryItem) item).getComposite();
+            yoEntryDefinition.setCompositeType(composite.getPattern().getType());
+            yoEntryDefinition.setCompositeFullname(composite.getFullname());
+         }
          definition.getYoEntries().add(yoEntryDefinition);
       }
       return definition;
@@ -219,9 +244,9 @@ public class YoEntryListViewController
       String fullname = yoCompositeSelected.get().get(1);
       YoComposite yoComposite = yoCompositeSearchManager.getYoComposite(type, fullname);
 
-      if (yoComposite != null && !yoEntryListView.getItems().contains(yoComposite))
+      if (yoComposite != null && !containsComposite(yoComposite))
       {
-         yoEntryListView.getItems().add(yoComposite);
+         yoEntryListView.getItems().add(new YoVariableEntryItem(yoComposite));
          messager.submitMessage(yoCompositeSelectedTopic, null);
       }
    }
@@ -231,26 +256,38 @@ public class YoEntryListViewController
       if (!event.isPrimaryButtonDown())
          return;
 
-      List<YoComposite> selectedItems = new ArrayList<>(yoEntryListView.getSelectionModel().getSelectedItems());
+      ObservableList<YoEntryItem> selectedItems = yoEntryListView.getSelectionModel().getSelectedItems();
       if (selectedItems.isEmpty())
          return;
 
+      List<YoComposite> selectedComposites = selectedItems.stream()
+                                                          .filter(YoVariableEntryItem.class::isInstance)
+                                                          .map(YoVariableEntryItem.class::cast)
+                                                          .map(YoVariableEntryItem::getComposite)
+                                                          .collect(Collectors.toList());
+
       Dragboard dragBoard = yoEntryListView.startDragAndDrop(TransferMode.COPY);
       ClipboardContent clipboardContent = new ClipboardContent();
-      if (selectedItems.size() == 1)
+      if (selectedComposites.size() == 1)
       {
-         YoComposite yoComposite = selectedItems.get(0);
+         YoComposite yoComposite = selectedComposites.get(0);
          clipboardContent.put(DragAndDropTools.YO_COMPOSITE_REFERENCE, Arrays.asList(yoComposite.getPattern().getType(), yoComposite.getFullname()));
       }
-      else
+      else if (selectedComposites.size() > 1)
       {
          List<String> content = new ArrayList<>();
-         for (YoComposite yoComposite : selectedItems)
+         for (YoComposite yoComposite : selectedComposites)
          {
             content.add(yoComposite.getPattern().getType());
             content.add(yoComposite.getFullname());
          }
          clipboardContent.put(DragAndDropTools.YO_COMPOSITE_LIST_REFERENCE, content);
+      }
+      else
+      {
+         // Divider-only selection: still start a drag so internal reorder works.
+         // Dragboards must carry some content; a placeholder string is enough.
+         clipboardContent.putString("scs2-entry-reorder");
       }
       dragBoard.setContent(clipboardContent);
       event.consume();
@@ -288,9 +325,9 @@ public class YoEntryListViewController
       {
          for (YoComposite yoComposite : yoComposites)
          {
-            if (yoEntryListView.getItems().contains(yoComposite))
+            if (containsComposite(yoComposite))
                continue;
-            yoEntryListView.getItems().add(yoComposite);
+            yoEntryListView.getItems().add(new YoVariableEntryItem(yoComposite));
             success = true;
          }
       }
@@ -308,7 +345,22 @@ public class YoEntryListViewController
       List<YoComposite> yoComposites = DragAndDropTools.retrieveYoCompositesFromDragBoard(db, yoCompositeSearchManager);
       if (yoComposites == null)
          return false;
-      return !yoEntryListView.getItems().containsAll(yoComposites);
+      for (YoComposite yoComposite : yoComposites)
+      {
+         if (!containsComposite(yoComposite))
+            return true;
+      }
+      return false;
+   }
+
+   private boolean containsComposite(YoComposite yoComposite)
+   {
+      for (YoEntryItem item : yoEntryListView.getItems())
+      {
+         if (item instanceof YoVariableEntryItem variableItem && variableItem.getComposite().equals(yoComposite))
+            return true;
+      }
+      return false;
    }
 
    public void setSelectionHighlight(boolean isSelected)
@@ -339,8 +391,8 @@ public class YoEntryListViewController
 
    private void reorderItems(List<Integer> selectedIndices, int dropIndex, boolean insertBefore)
    {
-      ObservableList<YoComposite> items = yoEntryListView.getItems();
-      List<YoComposite> itemsToMove = selectedIndices.stream().sorted().map(items::get).collect(Collectors.toList());
+      ObservableList<YoEntryItem> items = yoEntryListView.getItems();
+      List<YoEntryItem> itemsToMove = selectedIndices.stream().sorted().map(items::get).collect(Collectors.toList());
 
       int absoluteDropIndex = insertBefore ? dropIndex : dropIndex + 1;
       long selectedBeforeDrop = selectedIndices.stream().filter(i -> i < absoluteDropIndex).count();
@@ -349,10 +401,48 @@ public class YoEntryListViewController
       items.removeAll(itemsToMove);
       items.addAll(Math.min(adjustedIndex, items.size()), itemsToMove);
 
-      MultipleSelectionModel<YoComposite> selectionModel = yoEntryListView.getSelectionModel();
+      MultipleSelectionModel<YoEntryItem> selectionModel = yoEntryListView.getSelectionModel();
       selectionModel.clearSelection();
       int newStart = Math.min(adjustedIndex, items.size() - itemsToMove.size());
       for (int i = newStart; i < newStart + itemsToMove.size(); i++)
          selectionModel.select(i);
+   }
+
+   private static Function<ListView<YoEntryItem>, MenuItem> addDividerAboveMenuItemFactory()
+   {
+      return listView ->
+      {
+         FontIcon icon = new FontIcon();
+         icon.getStyleClass().add("add-icon-view");
+         MenuItem menuItem = new MenuItem("Add divider above", icon);
+         menuItem.setOnAction(e ->
+                              {
+                                 int index = listView.getSelectionModel().getSelectedIndex();
+                                 if (index < 0)
+                                    index = 0;
+                                 listView.getItems().add(index, new YoDividerEntryItem());
+                              });
+         return menuItem;
+      };
+   }
+
+   private static Function<ListView<YoEntryItem>, MenuItem> addDividerBelowMenuItemFactory()
+   {
+      return listView ->
+      {
+         FontIcon icon = new FontIcon();
+         icon.getStyleClass().add("add-icon-view");
+         MenuItem menuItem = new MenuItem("Add divider below", icon);
+         menuItem.setOnAction(e ->
+                              {
+                                 int index = listView.getSelectionModel().getSelectedIndex();
+                                 if (index < 0)
+                                    index = listView.getItems().size();
+                                 else
+                                    index = index + 1;
+                                 listView.getItems().add(index, new YoDividerEntryItem());
+                              });
+         return menuItem;
+      };
    }
 }

@@ -744,3 +744,18 @@
     -jfx-toggle-color: -default-pale-red;
     -jfx-untoggle-color: -default-grey;
 }
+
+/*******************************************************************************
+ *                                                                             *
+ * YoEntry divider                                                             *
+ *                                                                             *
+ ******************************************************************************/
+
+.yo-entry-divider {
+    -fx-background-color: #909090;
+    -fx-background-radius: 2;
+    -fx-pref-height: 4;
+    -fx-min-height: 4;
+    -fx-max-height: 4;
+    -fx-padding: 0 4 0 4;
+}

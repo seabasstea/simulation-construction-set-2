@@ -5,7 +5,7 @@
 <Menu text="View" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="us.ihmc.scs2.sessionVisualizer.jfx.controllers.menu.ViewMenuController">
     <items>
-        <CheckMenuItem fx:id="showLeftSidebarMenuItem" text="Show Left Sidebar" selected="false" accelerator="Shortcut+B"/>
-        <CheckMenuItem fx:id="showRightSidebarMenuItem" text="Show Right Sidebar" selected="false" accelerator="Shortcut+Shift+B"/>
+        <CheckMenuItem fx:id="showLeftSidebarMenuItem" text="Show Left Sidebar" selected="false" accelerator="Shortcut+1"/>
+        <CheckMenuItem fx:id="showRightSidebarMenuItem" text="Show Right Sidebar" selected="false" accelerator="Shortcut+Shift+1"/>
     </items>
 </Menu>

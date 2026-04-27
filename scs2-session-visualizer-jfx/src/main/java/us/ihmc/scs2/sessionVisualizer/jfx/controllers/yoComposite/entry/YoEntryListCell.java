@@ -1,4 +1,4 @@
-package us.ihmc.scs2.sessionVisualizer.jfx.controllers.yoComposite.search;
+package us.ihmc.scs2.sessionVisualizer.jfx.controllers.yoComposite.entry;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyProperty;
@@ -15,29 +15,32 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import us.ihmc.scs2.sessionVisualizer.jfx.YoNameDisplay;
+import us.ihmc.scs2.sessionVisualizer.jfx.controllers.yoComposite.search.YoVariableControlFactory;
 import us.ihmc.scs2.sessionVisualizer.jfx.managers.YoManager;
 import us.ihmc.scs2.sessionVisualizer.jfx.properties.YoVariableProperty;
 import us.ihmc.scs2.sessionVisualizer.jfx.yoComposite.YoComposite;
+import us.ihmc.scs2.sessionVisualizer.jfx.yoComposite.YoEntryItem;
+import us.ihmc.scs2.sessionVisualizer.jfx.yoComposite.YoVariableEntryItem;
 import us.ihmc.yoVariables.variable.YoVariable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-// FIXME Need to manually do some cleanup when the cell is being updated.
-public class YoCompositeListCell extends ListCell<YoComposite>
+public class YoEntryListCell extends ListCell<YoEntryItem>
 {
    private final YoManager yoManager;
-   private final ListView<YoComposite> owner;
-
+   private final ListView<YoEntryItem> owner;
    private final ReadOnlyProperty<YoNameDisplay> nameDisplay;
-
-   private YoComposite yoComposite;
-   private Labeled yoCompositeNameDisplay = this;
    private final Property<Integer> numberPrecision;
 
+   private YoEntryItem currentItem;
+   private Labeled yoCompositeNameDisplay = this;
    private final List<YoVariableProperty<?, ?>> yoVariableProperties = new ArrayList<>();
 
-   public YoCompositeListCell(YoManager yoManager, ReadOnlyProperty<YoNameDisplay> nameDisplay, Property<Integer> numberPrecision, ListView<YoComposite> owner)
+   public YoEntryListCell(YoManager yoManager,
+                          ReadOnlyProperty<YoNameDisplay> nameDisplay,
+                          Property<Integer> numberPrecision,
+                          ListView<YoEntryItem> owner)
    {
       this.yoManager = yoManager;
       this.nameDisplay = nameDisplay;
@@ -47,23 +50,22 @@ public class YoCompositeListCell extends ListCell<YoComposite>
    }
 
    @Override
-   protected void updateItem(YoComposite yoComposite, boolean empty)
+   protected void updateItem(YoEntryItem item, boolean empty)
    {
-      boolean isSameItem = this.yoComposite == yoComposite;
-      this.yoComposite = yoComposite;
-      super.updateItem(yoComposite, empty);
+      boolean isSameItem = this.currentItem == item;
+      this.currentItem = item;
+      super.updateItem(item, empty);
 
       if (isSameItem && !empty)
          return;
 
-      // Cleanup the properties: remove listeners and disable linked buffer
       yoVariableProperties.forEach(YoVariableProperty::dispose);
       yoVariableProperties.clear();
 
       prefWidthProperty().bind(owner.widthProperty().subtract(15.0));
       setMinWidth(100.0);
 
-      if (empty || yoManager.getLinkedRootRegistry() == null)
+      if (empty || item == null || yoManager.getLinkedRootRegistry() == null)
       {
          setGraphic(null);
          setText(null);
@@ -71,10 +73,34 @@ public class YoCompositeListCell extends ListCell<YoComposite>
          return;
       }
 
+      if (item.isDivider())
+      {
+         renderDivider();
+      }
+      else
+      {
+         renderVariable(((YoVariableEntryItem) item).getComposite());
+      }
+   }
+
+   private void renderDivider()
+   {
+      Region bar = new Region();
+      bar.getStyleClass().add("yo-entry-divider");
+      bar.setMaxWidth(Double.MAX_VALUE);
+      setGraphic(bar);
+      setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+      setText(null);
+      setTooltip(null);
+      setAlignment(Pos.CENTER);
+      setGraphicTextGap(0);
+   }
+
+   private void renderVariable(YoComposite yoComposite)
+   {
       if (yoComposite.getPattern().getComponentIdentifiers() == null)
       {
          YoVariable yoVariable = yoComposite.getYoComponents().get(0);
-
          Region yoVariableControl = YoVariableControlFactory.createYoVariableControl(yoVariable,
                                                                                      numberPrecision,
                                                                                      yoManager.getLinkedRootRegistry(),
@@ -122,12 +148,12 @@ public class YoCompositeListCell extends ListCell<YoComposite>
          setTooltip(null);
       }
 
-      updateYoCompositeName(nameDisplay.getValue());
-      nameDisplay.addListener((o, oldValue, newValue) -> updateYoCompositeName(newValue));
+      updateYoCompositeName(nameDisplay.getValue(), yoComposite);
+      nameDisplay.addListener((o, oldValue, newValue) -> updateYoCompositeName(newValue, yoComposite));
       yoCompositeNameDisplay.setTooltip(new Tooltip(yoComposite.getName() + "\n" + yoComposite.getNamespace()));
    }
 
-   private void updateYoCompositeName(YoNameDisplay nameDisplay)
+   private void updateYoCompositeName(YoNameDisplay nameDisplay, YoComposite yoComposite)
    {
       if (yoCompositeNameDisplay == null || yoComposite == null)
          return;
