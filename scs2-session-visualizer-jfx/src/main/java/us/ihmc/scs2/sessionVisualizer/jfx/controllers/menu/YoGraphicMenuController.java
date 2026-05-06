@@ -50,7 +50,7 @@ public class YoGraphicMenuController implements VisualizerController
       owner = toolkit.getWindow();
 
       messager.bindBidirectional(topics.getShowOverheadPlotter(), overheadPlotterMenuItem.selectedProperty(), false);
-      messager.bindBidirectional(topics.getShowViewport(), showViewportMenuItem.selectedProperty(), true);
+      messager.bindBidirectional(topics.getShowViewport(), showViewportMenuItem.selectedProperty(), false);
       showRobotMenuItem.selectedProperty()
                        .addListener((o, oldValue, newValue) -> messager.submitMessage(topics.getRobotVisualRequest(), visible(ALL_ROBOTS, newValue)));
       enableWireframeRobotModeMenuItem.selectedProperty()
