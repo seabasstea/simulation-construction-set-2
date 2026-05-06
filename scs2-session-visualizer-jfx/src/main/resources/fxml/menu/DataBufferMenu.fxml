@@ -2,6 +2,8 @@
 
 <?import com.jfoenix.controls.JFXTextField?>
 <?import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.CustomMenuItem?>
 <?import javafx.scene.control.Label?>
@@ -9,6 +11,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import java.lang.String?>
 <Menu fx:id="menu" text="Data Buffer" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1"
@@ -36,30 +39,55 @@
         </MenuItem>
         <CustomMenuItem fx:id="bufferSizeMenuItem" mnemonicParsing="false" text="Unspecified Action">
             <content>
-                <HBox alignment="CENTER" spacing="5.0">
+                <HBox alignment="CENTER_LEFT" spacing="5.0">
+                    <padding>
+                        <Insets left="12.0"/>
+                    </padding>
                     <children>
-                        <FontIcon>
-                            <styleClass>
-                                <String fx:value="resize-data-buffer-icon-view"/>
-                                <String fx:value="menu-item-icon-view"/>
-                            </styleClass>
-                        </FontIcon>
+                        <StackPane minWidth="20.0" prefWidth="20.0" maxWidth="20.0" alignment="CENTER">
+                            <FontIcon>
+                                <styleClass>
+                                    <String fx:value="resize-data-buffer-icon-view"/>
+                                    <String fx:value="menu-item-icon-view"/>
+                                </styleClass>
+                            </FontIcon>
+                        </StackPane>
                         <Label text="Buffer size:" textFill="#000000fc"/>
                         <JFXTextField fx:id="bufferSizeTextField" prefWidth="55.0"/>
                     </children>
                 </HBox>
             </content>
         </CustomMenuItem>
+        <CustomMenuItem fx:id="bufferSizePresetsMenuItem" hideOnClick="false" mnemonicParsing="false" text="Unspecified Action">
+            <content>
+                <HBox alignment="CENTER_LEFT" spacing="5.0">
+                    <padding>
+                        <Insets left="37.0"/>
+                    </padding>
+                    <children>
+                        <Button onAction="#applyBufferSizePreset" text="15K" userData="15000"/>
+                        <Button onAction="#applyBufferSizePreset" text="30K" userData="30000"/>
+                        <Button onAction="#applyBufferSizePreset" text="45K" userData="45000"/>
+                        <Button onAction="#applyBufferSizePreset" text="60K" userData="60000"/>
+                    </children>
+                </HBox>
+            </content>
+        </CustomMenuItem>
         <CustomMenuItem fx:id="bufferRecordTickPeriodMenuItem" mnemonicParsing="false" text="Unspecified Action">
             <content>
-                <HBox alignment="CENTER" spacing="5.0">
+                <HBox alignment="CENTER_LEFT" spacing="5.0">
+                    <padding>
+                        <Insets left="12.0"/>
+                    </padding>
                     <children>
-                        <FontIcon>
-                            <styleClass>
-                                <String fx:value="buffer-record-tick-period-icon-view"/>
-                                <String fx:value="menu-item-icon-view"/>
-                            </styleClass>
-                        </FontIcon>
+                        <StackPane minWidth="20.0" prefWidth="20.0" maxWidth="20.0" alignment="CENTER">
+                            <FontIcon>
+                                <styleClass>
+                                    <String fx:value="buffer-record-tick-period-icon-view"/>
+                                    <String fx:value="menu-item-icon-view"/>
+                                </styleClass>
+                            </FontIcon>
+                        </StackPane>
                         <Label text="Record tick period:" textFill="#000000fc"/>
                         <JFXTextField fx:id="bufferRecordTickPeriodTextField" prefWidth="55.0"/>
                     </children>
@@ -68,14 +96,19 @@
         </CustomMenuItem>
         <CustomMenuItem fx:id="numberPrecisionMenuItem" mnemonicParsing="false" text="Unspecified Action">
             <content>
-                <HBox alignment="CENTER" spacing="5.0">
+                <HBox alignment="CENTER_LEFT" spacing="5.0">
+                    <padding>
+                        <Insets left="12.0"/>
+                    </padding>
                     <children>
-                        <MaterialDesignIconView>
-                            <styleClass>
-                                <String fx:value="double-precision-icon-view"/>
-                                <String fx:value="menu-item-icon-view"/>
-                            </styleClass>
-                        </MaterialDesignIconView>
+                        <StackPane minWidth="20.0" prefWidth="20.0" maxWidth="20.0" alignment="CENTER">
+                            <MaterialDesignIconView>
+                                <styleClass>
+                                    <String fx:value="double-precision-icon-view"/>
+                                    <String fx:value="menu-item-icon-view"/>
+                                </styleClass>
+                            </MaterialDesignIconView>
+                        </StackPane>
                         <Label text="Number precision:" textFill="#000000fc"/>
                         <Spinner fx:id="numberPrecisionSpinner" prefWidth="70.0"/>
                     </children>

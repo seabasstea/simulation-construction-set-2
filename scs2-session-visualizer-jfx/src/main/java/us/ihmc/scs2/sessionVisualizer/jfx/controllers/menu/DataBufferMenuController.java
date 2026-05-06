@@ -3,7 +3,9 @@ package us.ihmc.scs2.sessionVisualizer.jfx.controllers.menu;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import javafx.beans.property.Property;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Menu;
@@ -46,6 +48,7 @@ public class DataBufferMenuController implements VisualizerController
 
    private boolean initializeBufferSizeTextField = true;
    private Property<YoBufferPropertiesReadOnly> bufferProperties;
+   private TextFormatter<Integer> bufferSizeFormatter;
 
    @Override
    public void initialize(SessionVisualizerWindowToolkit toolkit)
@@ -60,7 +63,7 @@ public class DataBufferMenuController implements VisualizerController
       });
       messager.addFXTopicListener(topics.getDisableUserControls(), disable -> menu.setDisable(disable));
 
-      TextFormatter<Integer> bufferSizeFormatter = new TextFormatter<>(new IntegerStringConverter(), 0, new PositiveIntegerValueFilter());
+      bufferSizeFormatter = new TextFormatter<>(new IntegerStringConverter(), 0, new PositiveIntegerValueFilter());
       bufferSizeTextField.setTextFormatter(bufferSizeFormatter);
 
       MenuTools.configureTextFieldForCustomMenuItem(bufferSizeMenuItem, bufferSizeTextField);
@@ -127,6 +130,15 @@ public class DataBufferMenuController implements VisualizerController
          CropBufferRequest cropBufferRequest = new CropBufferRequest(bufferProperties.getValue().getInPoint(), bufferProperties.getValue().getOutPoint());
          messager.submitMessage(topics.getYoBufferCropRequest(), cropBufferRequest);
       }
+   }
+
+   @FXML
+   private void applyBufferSizePreset(ActionEvent event)
+   {
+      Object userData = ((Node) event.getSource()).getUserData();
+      if (userData == null)
+         return;
+      bufferSizeFormatter.setValue(Integer.parseInt(userData.toString()));
    }
 
    @FXML
