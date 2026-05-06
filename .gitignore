@@ -91,3 +91,8 @@
 **/rebel.xml
 **/generatedTestSuites/*TestSuite.java
 /SCS2-Claude-Project-Plan.md
+
+# Gradle wrapper (managed by repository-group composite build)
+/gradle/
+/gradlew
+/gradlew.bat
