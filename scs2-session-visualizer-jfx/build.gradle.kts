@@ -287,6 +287,95 @@ tasks.register("buildWindowsMsiPackage") {
    }
 }
 
+/**
+ * This task is used to compile the project and filter out any dependency not required for macOS.
+ */
+tasks.register("installDistMac") {
+   dependsOn("installDist")
+
+   doLast {
+      fileTree("${project.projectDir}/build/install/scs2-session-visualizer-jfx/lib").matching {
+         include("*-win.jar")
+         include("*-windows-*")
+         include("*-android-*")
+         include("*-ios-*")
+         include("*-linux.jar")
+         include("*-linux-*.jar")
+      }.forEach(File::delete)
+   }
+}
+
+/**
+ * Builds a native macOS .dmg installer via jpackage. On macOS, jpackage bundles the JRE, both
+ * launchers, and the app-image straight into a .dmg in a single step (no external tooling like the
+ * WiX toolchain used for the Windows MSI). Requires running on macOS with a JDK that ships jpackage.
+ * Run with: gradle buildMacDmgPackage
+ */
+tasks.register("buildMacDmgPackage") {
+   dependsOn("installDistMac")
+
+   doLast {
+      if (!Os.isFamily(Os.FAMILY_MAC))
+         throw GradleException("buildMacDmgPackage must be run on macOS.")
+
+      val deploymentFolder = "${project.projectDir}/deployment/macos"
+      File(deploymentFolder).deleteRecursively()
+      File(deploymentFolder).mkdirs()
+
+      val libFolder = "${project.projectDir}/build/install/scs2-session-visualizer-jfx/lib"
+      val jpackage = "${System.getProperty("java.home")}/bin/jpackage"
+      val mainJarName = "scs2-session-visualizer-jfx-${ihmc.version}.jar"
+
+      // macOS CFBundleVersion accepts at most three integers and the first must be > 0.
+      // Strip the leading Java-major prefix (e.g. "17-" from "17-0.32.1.4"), keep the first three
+      // numeric components, and fall back to the Java-major as the leading number if it would be 0.
+      val javaMajor = Regex("^(\\d+)-").find(ihmc.version)?.groupValues?.get(1) ?: "1"
+      val numericParts = ihmc.version.replace(Regex("^\\d+-"), "").split('.').take(3).toMutableList()
+      if (numericParts.firstOrNull() == "0") numericParts[0] = javaMajor
+      val appVersion = numericParts.joinToString(".")
+
+      // Generate the .icns icon from the existing PNG using the macOS iconutil pipeline.
+      val srcPng = "${project.projectDir}/src/main/resources/icons/scs-icon.png"
+      val iconsetDir = File("${project.projectDir}/build/scs-icon.iconset")
+      iconsetDir.deleteRecursively(); iconsetDir.mkdirs()
+      listOf(
+         "icon_16x16.png" to 16, "icon_16x16@2x.png" to 32,
+         "icon_32x32.png" to 32, "icon_32x32@2x.png" to 64,
+         "icon_128x128.png" to 128, "icon_128x128@2x.png" to 256,
+         "icon_256x256.png" to 256, "icon_256x256@2x.png" to 512,
+         "icon_512x512.png" to 512, "icon_512x512@2x.png" to 1024
+      ).forEach { (name, px) ->
+         ihmc.exec(ProcessBuilder("sips", "-z", "$px", "$px", srcPng, "--out", "${iconsetDir}/$name"))
+      }
+      val icnsFile = "${project.projectDir}/build/scs-icon.icns"
+      ihmc.exec(ProcessBuilder("iconutil", "-c", "icns", iconsetDir.absolutePath, "-o", icnsFile))
+
+      // Secondary launcher for the MCAP repack utility, bundled alongside the main app.
+      val mcapPropsFile = File("${project.projectDir}/build/mcap-launcher.properties")
+      mcapPropsFile.writeText(
+         "main-class=us.ihmc.scs2.sessionVisualizer.jfx.session.mcap.MCAPRepackApplication\n" +
+         "java-options=-Dprism.vsync=false\n"
+      )
+
+      // Single jpackage invocation: app-image + JRE -> .dmg.
+      ihmc.exec(ProcessBuilder(
+         jpackage,
+         "--type", "dmg",
+         "--input", libFolder,
+         "--dest", deploymentFolder,
+         "--name", sessionVisualizerExecutableName,
+         "--main-class", "us.ihmc.scs2.sessionVisualizer.jfx.SessionVisualizer",
+         "--main-jar", mainJarName,
+         "--app-version", appVersion,
+         "--java-options", "-Dprism.vsync=false",
+         "--add-launcher", "$mcapRepackAppExecutableName=${mcapPropsFile.absolutePath}",
+         "--icon", icnsFile,
+         "--vendor", "IHMC",
+         "--mac-package-name", "SCS2"
+      ))
+   }
+}
+
 fun addVSyncLinuxHackForJavaFXApp(sourceFolder: String, javafxappname: String)
 {
    val launchScriptFile = File("$sourceFolder/bin/$javafxappname")

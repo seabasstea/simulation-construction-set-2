@@ -1,0 +1,40 @@
+name: Release - macOS DMG
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-dmg:
+    # macos-14 is Apple Silicon (arm64). The build resolves mac-aarch64 JavaFX natives automatically.
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-package: 'jdk'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.5
+
+      - name: Build macOS DMG
+        working-directory: scs2-session-visualizer-jfx
+        run: gradle buildMacDmgPackage --no-daemon
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: SCS2 ${{ github.ref_name }}
+          files: scs2-session-visualizer-jfx/deployment/macos/*.dmg
+          generate_release_notes: true
