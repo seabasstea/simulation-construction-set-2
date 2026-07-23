@@ -75,6 +75,10 @@ mainDependencies {
    // installDistLinux/installDistWindows strip *-macosx-* so this only ships in the macOS build.
    api("org.bytedeco:javacpp:1.5.11:macosx-arm64") { isTransitive = false }
    api("org.bytedeco:javacpp:1.5.11:macosx-x86_64") { isTransitive = false }
+
+   // lz4-java 1.8.0 bundles a darwin/aarch64 native; the transitively-pulled lz4 1.3.0 (2014) only has
+   // darwin/x86_64, so log decompression falls back to the slow pure-Java LZ4 on Apple Silicon.
+   api("org.lz4:lz4-java:1.8.0")
 }
 
 testDependencies {

@@ -352,14 +352,22 @@ public class RemoteSessionManagerController implements SessionControlsController
       if (!sessionInProgressProperty.get())
          return;
       sessionFactory.unloadSession();
-      try
+      // YoVariableClient.stop() blocks on the client monitor that YoVariableClient.start() can still hold
+      // while start() calls back onto the JavaFX thread (via runAndWait). Calling stop() on the JavaFX
+      // thread while a session is still loading therefore deadlocks the UI. Run only the blocking stop off
+      // the JavaFX thread; the FX thread is then free to service start()'s pending callback, which releases
+      // the monitor and lets stop() complete.
+      backgroundExecutorManager.executeInBackground(() ->
       {
-         client.stop();
-      }
-      catch (RuntimeException e)
-      {
-         // Just be silent about it, it's possible that there's no session ongoing in the case of a crash in startSession()
-      }
+         try
+         {
+            client.stop();
+         }
+         catch (RuntimeException e)
+         {
+            // Just be silent about it, it's possible that there's no session ongoing in the case of a crash in startSession()
+         }
+      });
       setIsLoading(false);
       sessionInProgressProperty.set(false);
    }
