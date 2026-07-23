@@ -606,6 +606,14 @@ public class JavaFXVisualTools
          phongMaterial.setSpecularPower(materialDefinition.getShininess());
          atLeastOneFieldSet = true;
       }
+      else if (diffuseColor != null && org.apache.commons.lang3.SystemUtils.IS_OS_MAC)
+      {
+         // Workaround for a JavaFX 3D lighting bug on macOS (Sonoma+ / Apple Silicon): a PhongMaterial
+         // that only has a diffuse color renders black because the lighting equation needs a specular
+         // term to be set. Add a dim specular so materials light correctly on macOS; the value is low
+         // enough to leave the look essentially unchanged.
+         phongMaterial.setSpecularColor(Color.rgb(30, 30, 30));
+      }
 
       if (diffuseMap != null)
       {
