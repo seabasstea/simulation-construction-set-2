@@ -1,6 +1,7 @@
 package us.ihmc.scs2.session.remote;
 
 import us.ihmc.commons.Conversions;
+import us.ihmc.log.LogTools;
 import us.ihmc.robotDataLogger.YoVariableClientInterface;
 import us.ihmc.robotDataLogger.handshake.LogHandshake;
 import us.ihmc.robotDataLogger.handshake.YoVariableHandshakeParser;
@@ -8,6 +9,8 @@ import us.ihmc.robotDataLogger.util.DebugRegistry;
 import us.ihmc.robotDataLogger.websocket.command.DataServerCommand;
 import us.ihmc.scs2.definition.robot.RobotDefinition;
 import us.ihmc.scs2.definition.robot.RobotStateDefinition;
+import us.ihmc.scs2.definition.robot.urdf.URDFTools;
+import us.ihmc.scs2.definition.robot.urdf.items.URDFModel;
 import us.ihmc.scs2.definition.terrain.TerrainObjectDefinition;
 import us.ihmc.scs2.definition.yoGraphic.YoGraphicDefinition;
 import us.ihmc.scs2.session.Session;
@@ -16,6 +19,7 @@ import us.ihmc.scs2.session.SessionProperties;
 import us.ihmc.scs2.session.tools.RobotModelLoader;
 import us.ihmc.scs2.simulation.robot.Robot;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,11 +63,17 @@ public class RemoteSession extends Session
       rootRegistry.addChild(debugRegistry.getYoRegistry());
       yoGraphicDefinitions.addAll(handshakeParser.getSCS2YoGraphics());
 
-      RobotDefinition robotDefinition = RobotModelLoader.loadModel(handshake.getModelName(),
-                                                                   handshake.getModelLoaderClass(),
-                                                                   handshake.getResourceDirectories(),
-                                                                   handshake.getModel(),
-                                                                   handshake.getResourceZip());
+      // Optional override: if -Dscs2.remote.robotModelFile=<path to .urdf> is set, use that local model
+      // instead of the one advertised by the server (e.g. to show current mk1_1 geometry when the server
+      // still streams an older model). The streamed joint data still binds by joint name in
+      // setupRobotUpdater below, so the override's joint names must match what the server sends.
+      RobotDefinition robotDefinition = loadRobotModelOverride();
+      if (robotDefinition == null)
+         robotDefinition = RobotModelLoader.loadModel(handshake.getModelName(),
+                                                      handshake.getModelLoaderClass(),
+                                                      handshake.getResourceDirectories(),
+                                                      handshake.getModel(),
+                                                      handshake.getResourceZip());
       if (robotDefinition != null)
       {
          robotDefinitions.add(robotDefinition);
@@ -92,6 +102,51 @@ public class RemoteSession extends Session
                                          disconnect();
                                    });
       setDesiredBufferPublishPeriod(Conversions.secondsToNanoseconds(1.0 / 60.0));
+   }
+
+   /**
+    * Loads a local robot model to use instead of the one advertised by the log server, when the system
+    * property {@code scs2.remote.robotModelFile} points to a {@code .urdf} file. Returns {@code null}
+    * (falling back to the server model) when the property is unset, the file is missing/not a URDF, or
+    * parsing fails. Meshes are resolved relative to the URDF's own directory.
+    */
+   private static RobotDefinition loadRobotModelOverride()
+   {
+      String overridePath = System.getProperty("scs2.remote.robotModelFile");
+      if (overridePath == null || overridePath.isBlank())
+         return null;
+
+      File robotFile = new File(overridePath);
+      if (!robotFile.isFile())
+      {
+         LogTools.warn("scs2.remote.robotModelFile is set but no such file: " + robotFile.getAbsolutePath()
+               + " -- using the server-advertised model instead.");
+         return null;
+      }
+      if (!robotFile.getName().toLowerCase().endsWith(".urdf"))
+      {
+         LogTools.warn("scs2.remote.robotModelFile must be a .urdf file, got: " + robotFile.getName()
+               + " -- using the server-advertised model instead.");
+         return null;
+      }
+
+      try
+      {
+         URDFTools.URDFParserProperties parserProperties = new URDFTools.URDFParserProperties();
+         parserProperties.setSimplifyKinematics(false);
+         parserProperties.setTransformToZUp(false);
+         URDFModel urdfModel = URDFTools.loadURDFModel(robotFile, java.util.Collections.singletonList(robotFile.getParent()));
+         RobotDefinition robotDefinition = URDFTools.toRobotDefinition(urdfModel, parserProperties);
+         robotDefinition.sanitizeNames();
+         LogTools.info("Overriding remote robot model with local URDF: " + robotFile.getAbsolutePath());
+         return robotDefinition;
+      }
+      catch (Exception e)
+      {
+         LogTools.error("Failed to load scs2.remote.robotModelFile override from " + robotFile.getAbsolutePath() + ": "
+               + e.getMessage() + " -- using the server-advertised model instead.");
+         return null;
+      }
    }
 
    public long getDelay()
