@@ -65,6 +65,16 @@ mainDependencies {
 
    api("me.tongfei:progressbar:0.10.0")
    api("commons-cli:commons-cli:1.6.0")
+
+   // JavaCPP native library for macOS (Apple Silicon + Intel). The remote data-logger client
+   // (us.ihmc.pubsub -> SerializedPayload -> org.bytedeco.javacpp.BytePointer) needs the JavaCPP JNI
+   // native, but the us.ihmc:javacpp fork only publishes linux/windows natives. Without a macOS native
+   // the remote connection dies with UnsatisfiedLinkError (BytePointer.allocateArray) and the session
+   // is torn down immediately. These bytedeco natives are ABI-compatible with the 1.5.11 classes; only
+   // the native artifact is pulled (isTransitive = false) so the existing javacpp classes are untouched.
+   // installDistLinux/installDistWindows strip *-macosx-* so this only ships in the macOS build.
+   api("org.bytedeco:javacpp:1.5.11:macosx-arm64") { isTransitive = false }
+   api("org.bytedeco:javacpp:1.5.11:macosx-x86_64") { isTransitive = false }
 }
 
 testDependencies {
