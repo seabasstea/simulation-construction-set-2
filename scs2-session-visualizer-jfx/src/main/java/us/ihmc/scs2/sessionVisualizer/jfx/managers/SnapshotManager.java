@@ -1,7 +1,5 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.managers;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -16,6 +14,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
@@ -26,6 +25,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import us.ihmc.log.LogTools;
@@ -87,10 +87,11 @@ public class SnapshotManager
       int nCols = Math.min(4, snapshots.size());
       int nRows = snapshots.size() / nCols + 1;
 
-      Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-      System.out.println(screenSize);
-      double width = 0.5 * screenSize.getWidth() / nCols;
-      double height = 0.5 * screenSize.getHeight() / nRows;
+      // JavaFX Screen instead of java.awt.Toolkit#getScreenSize: the AWT call deadlocks the JavaFX
+      // Application Thread on macOS (LWCToolkit must init on the AppKit main thread that JavaFX owns).
+      Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+      double width = 0.5 * screenBounds.getWidth() / nCols;
+      double height = 0.5 * screenBounds.getHeight() / nRows;
 
       List<ImageView> previews = snapshots.stream().map(snapshot -> newSnapshotPreview(snapshot, width, height)).collect(Collectors.toList());
 

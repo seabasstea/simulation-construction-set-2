@@ -1,7 +1,5 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.plotter;
 
-import java.awt.Toolkit;
-
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -14,6 +12,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.transform.NonInvertibleTransformException;
 import javafx.scene.transform.Transform;
+import javafx.stage.Screen;
 import us.ihmc.commons.FormattingTools;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.euclid.tuple2D.Vector2D;
@@ -163,7 +162,11 @@ public class PlotterGrid2D
 
    private static double calculateGridSize(double pixelsPerMeter)
    {
-      double medianGridWidthInPixels = Toolkit.getDefaultToolkit().getScreenResolution();
+      // Use the JavaFX Screen API rather than java.awt.Toolkit#getScreenResolution: on macOS the AWT
+      // call initializes LWCToolkit on the AppKit main thread, which the JavaFX Application Thread
+      // already owns during layout, deadlocking the UI. Screen#getDpi reports the same ~96 DPI on
+      // Linux/Windows and avoids pulling in AWT entirely.
+      double medianGridWidthInPixels = Screen.getPrimary().getDpi();
       double desiredMeters = medianGridWidthInPixels / pixelsPerMeter;
       double decimalPlace = Math.log10(desiredMeters);
       double orderOfMagnitude = Math.floor(decimalPlace);

@@ -21,7 +21,6 @@ import us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic.YoGraphicFX2D;
 import us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic.YoGraphicFX3D;
 import us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic.YoGraphicFXItem;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -633,18 +632,25 @@ public class SessionVisualizerIOTools
     */
    public static boolean openWebpage(URI uri)
    {
-      Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
-      if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE))
+      // Avoid java.awt.Desktop#browse: on macOS it initializes AWT on the AppKit main thread and
+      // deadlocks when called from the JavaFX Application Thread. Shell out to the platform's opener,
+      // which is AWT-free and works the same on all three platforms.
+      try
       {
-         try
-         {
-            desktop.browse(uri);
-            return true;
-         }
-         catch (Exception e)
-         {
-            e.printStackTrace();
-         }
+         String os = System.getProperty("os.name").toLowerCase();
+         ProcessBuilder processBuilder;
+         if (os.contains("mac"))
+            processBuilder = new ProcessBuilder("open", uri.toString());
+         else if (os.contains("win"))
+            processBuilder = new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", uri.toString());
+         else
+            processBuilder = new ProcessBuilder("xdg-open", uri.toString());
+         processBuilder.start();
+         return true;
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
       }
       return false;
    }
