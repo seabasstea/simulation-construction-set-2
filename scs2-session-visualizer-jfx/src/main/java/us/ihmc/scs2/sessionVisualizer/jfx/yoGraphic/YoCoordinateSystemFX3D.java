@@ -41,7 +41,7 @@ public class YoCoordinateSystemFX3D extends YoGraphicFX3D
    private DoubleProperty headLength = new SimpleDoubleProperty(0.05);
    private DoubleProperty headRadius = new SimpleDoubleProperty(0.02);
    private final Affine affine = new Affine();
-   private final PhongMaterial material = new PhongMaterial();
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial();
 
    private CoordinateSystemData newData = null;
    private CoordinateSystemData oldData = null;
@@ -192,7 +192,7 @@ public class YoCoordinateSystemFX3D extends YoGraphicFX3D
          headPosition.setElement(axis, data.bodyLength);
          meshBuilder.addCone(data.headLength, data.headRadius, headPosition, axisHeadOrientations[axis]);
          MeshView head = new MeshView(JavaFXVisualTools.toTriangleMesh(meshBuilder.generateTriangleMesh3D()));
-         head.setMaterial(new PhongMaterial(axisColors[axis]));
+         head.setMaterial(JavaFXVisualTools.newPhongMaterial(axisColors[axis]));
          head.setDrawMode(drawMode);
          head.idProperty().bind(nameProperty.concat(" (").concat(Axis3D.values[axis].name()).concat("-head)"));
 

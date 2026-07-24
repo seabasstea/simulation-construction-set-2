@@ -1,5 +1,7 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic;
 
+import us.ihmc.scs2.sessionVisualizer.jfx.definition.JavaFXVisualTools;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -38,7 +40,7 @@ public class YoPolygonExtrudedFX3D extends YoGraphicFX3D
    private IntegerProperty numberOfVertices = null;
    private DoubleProperty thickness = new SimpleDoubleProperty(0.02);
    private final Affine affine = new Affine();
-   private final PhongMaterial material = new PhongMaterial();
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial();
 
    private PolygonData newData = null;
    private PolygonData oldData = null;

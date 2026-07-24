@@ -33,7 +33,7 @@ public class YoPointcloudFX3D extends YoGraphicFX3D
    private DoubleProperty size = new SimpleDoubleProperty(0.01);
    private YoGraphicFXResource graphicResource = YoGraphicFXResourceManager.DEFAULT_POINT3D_GRAPHIC_RESOURCE;
 
-   private final PhongMaterial material = new PhongMaterial(Color.BLUE);
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial(Color.BLUE);
    private final Scale scale = new Scale();
    private final List<Translate> translates = new ArrayList<>();
    private final IntegerProperty numberOfPointsProperty = new SimpleIntegerProperty(this, "numberOfPoints", 0);

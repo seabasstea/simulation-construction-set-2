@@ -1,5 +1,7 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic;
 
+import us.ihmc.scs2.sessionVisualizer.jfx.definition.JavaFXVisualTools;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Group;
@@ -32,7 +34,7 @@ public class YoArrowFX3D extends YoGraphicFX3D
    private DoubleProperty headLength = new SimpleDoubleProperty(0.02);
    private DoubleProperty headRadius = new SimpleDoubleProperty(0.01);
 
-   private final PhongMaterial material = new PhongMaterial();
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial();
    private final Cylinder body = new Cylinder(1.0, 1.0);
    private final MeshView head = new MeshView(JavaFXTriangleMesh3DDefinitionInterpreter.interpretDefinition(new Cone3DDefinition(1.0, 1.0)));
    private final Group arrow = new Group(body, head);

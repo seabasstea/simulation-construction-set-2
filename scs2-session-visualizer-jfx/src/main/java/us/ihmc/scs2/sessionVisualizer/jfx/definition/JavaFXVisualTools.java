@@ -612,7 +612,7 @@ public class JavaFXVisualTools
          // that only has a diffuse color renders black because the lighting equation needs a specular
          // term to be set. Add a dim specular so materials light correctly on macOS; the value is low
          // enough to leave the look essentially unchanged.
-         phongMaterial.setSpecularColor(Color.rgb(30, 30, 30));
+         phongMaterial.setSpecularColor(Color.rgb(15, 15, 15));
       }
 
       if (diffuseMap != null)
@@ -638,6 +638,32 @@ public class JavaFXVisualTools
       }
 
       return atLeastOneFieldSet ? phongMaterial : DEFAULT_MATERIAL;
+   }
+
+   /**
+    * Creates a {@link PhongMaterial} that lights correctly on macOS. On macOS Sonoma+ (Apple Silicon) a
+    * PhongMaterial with only a diffuse color renders black; a dim specular color is set so 3D graphics
+    * light correctly. Other platforms get a plain PhongMaterial. Use this instead of {@code new
+    * PhongMaterial()} for scene graphics whose color is a solid diffuse color.
+    */
+   public static PhongMaterial newPhongMaterial()
+   {
+      PhongMaterial material = new PhongMaterial();
+      applyMacLightingWorkaround(material);
+      return material;
+   }
+
+   public static PhongMaterial newPhongMaterial(Color diffuseColor)
+   {
+      PhongMaterial material = new PhongMaterial(diffuseColor);
+      applyMacLightingWorkaround(material);
+      return material;
+   }
+
+   private static void applyMacLightingWorkaround(PhongMaterial material)
+   {
+      if (org.apache.commons.lang3.SystemUtils.IS_OS_MAC && material.getSpecularColor() == null)
+         material.setSpecularColor(Color.rgb(15, 15, 15));
    }
 
    private static final Map<URL, Image> cachedURLImages = new ConcurrentHashMap<>();

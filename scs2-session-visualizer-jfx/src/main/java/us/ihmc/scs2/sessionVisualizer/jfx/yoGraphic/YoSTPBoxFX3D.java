@@ -1,5 +1,7 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic;
 
+import us.ihmc.scs2.sessionVisualizer.jfx.definition.JavaFXVisualTools;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Node;
@@ -31,7 +33,7 @@ public class YoSTPBoxFX3D extends YoGraphicFX3D
    private DoubleProperty maximumMargin = new SimpleDoubleProperty(0.0);
 
    private final Affine affine = new Affine();
-   private final PhongMaterial material = new PhongMaterial();
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial();
 
    private STPBoxData newData = null;
    private STPBoxData oldData = null;

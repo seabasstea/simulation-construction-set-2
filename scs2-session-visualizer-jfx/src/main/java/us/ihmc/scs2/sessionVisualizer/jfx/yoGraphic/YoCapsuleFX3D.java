@@ -1,5 +1,7 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic;
 
+import us.ihmc.scs2.sessionVisualizer.jfx.definition.JavaFXVisualTools;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Node;
@@ -27,7 +29,7 @@ public class YoCapsuleFX3D extends YoGraphicFX3D
    private DoubleProperty length = new SimpleDoubleProperty(0.3);
    private DoubleProperty radius = new SimpleDoubleProperty(0.05);
 
-   private final PhongMaterial material = new PhongMaterial();
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial();
    private final MeshView capsuleNode = new MeshView();
    private final Translate translate = new Translate();
    private final Rotate rotate = new Rotate();

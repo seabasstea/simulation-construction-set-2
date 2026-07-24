@@ -1,5 +1,7 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic;
 
+import us.ihmc.scs2.sessionVisualizer.jfx.definition.JavaFXVisualTools;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
@@ -40,7 +42,7 @@ public class YoPolynomialFX3D extends YoGraphicFX3D
    private IntegerProperty numberOfDivisions = new SimpleIntegerProperty(20);
 
    private final Affine affine = new Affine();
-   private final PhongMaterial material = new PhongMaterial();
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial();
    private final Group polynomialNode = new Group();
 
    private Polynomial3DData newPolynomial = null;

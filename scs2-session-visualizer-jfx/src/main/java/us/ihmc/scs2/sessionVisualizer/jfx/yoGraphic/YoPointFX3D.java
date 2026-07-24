@@ -26,7 +26,7 @@ public class YoPointFX3D extends YoGraphicFX3D
    private DoubleProperty size = new SimpleDoubleProperty(0.1);
    private final Translate translate = new Translate();
    private final Scale scale = new Scale();
-   private final PhongMaterial material = new PhongMaterial();
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial();
    private YoGraphicFXResource graphicResource;
 
    public YoPointFX3D()

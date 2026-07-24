@@ -1,5 +1,7 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic;
 
+import us.ihmc.scs2.sessionVisualizer.jfx.definition.JavaFXVisualTools;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -34,7 +36,7 @@ public class YoConvexPolytopeFX3D extends YoGraphicFX3D
    private List<Tuple3DProperty> vertices = new ArrayList<>();
    private IntegerProperty numberOfVertices = null;
    private final Affine affine = new Affine();
-   private final PhongMaterial material = new PhongMaterial();
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial();
 
    private PolytopeData newData = null;
    private PolytopeData oldData = null;

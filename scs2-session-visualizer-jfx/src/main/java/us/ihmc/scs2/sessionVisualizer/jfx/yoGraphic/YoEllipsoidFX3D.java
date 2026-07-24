@@ -1,5 +1,7 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic;
 
+import us.ihmc.scs2.sessionVisualizer.jfx.definition.JavaFXVisualTools;
+
 import javafx.scene.Node;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.DrawMode;
@@ -21,7 +23,7 @@ public class YoEllipsoidFX3D extends YoGraphicFX3D
    private Tuple3DProperty radii = new Tuple3DProperty(null, 0.0, 0.0, 0.0);
 
    private final Affine affine = new Affine();
-   private final PhongMaterial material = new PhongMaterial();
+   private final PhongMaterial material = JavaFXVisualTools.newPhongMaterial();
 
    public YoEllipsoidFX3D()
    {

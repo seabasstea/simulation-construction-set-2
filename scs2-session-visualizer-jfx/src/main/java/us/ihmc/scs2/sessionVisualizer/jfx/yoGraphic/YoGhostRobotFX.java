@@ -1,5 +1,7 @@
 package us.ihmc.scs2.sessionVisualizer.jfx.yoGraphic;
 
+import us.ihmc.scs2.sessionVisualizer.jfx.definition.JavaFXVisualTools;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -331,7 +333,7 @@ public class YoGhostRobotFX extends YoGraphicFX3D
          }
          else
          {
-            overridingMaterial = new PhongMaterial();
+            overridingMaterial = JavaFXVisualTools.newPhongMaterial();
             overridingMaterial.diffuseColorProperty().addListener((var) -> overrideMaterialRecursive(rootNode, overridingMaterial));
             overrideMaterialRecursive(rootNode, overridingMaterial);
          }
