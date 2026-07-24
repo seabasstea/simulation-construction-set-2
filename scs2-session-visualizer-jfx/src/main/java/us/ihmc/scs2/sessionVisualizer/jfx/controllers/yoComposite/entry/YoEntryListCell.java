@@ -150,7 +150,22 @@ public class YoEntryListCell extends ListCell<YoEntryItem>
 
       updateYoCompositeName(nameDisplay.getValue(), yoComposite);
       nameDisplay.addListener((o, oldValue, newValue) -> updateYoCompositeName(newValue, yoComposite));
-      yoCompositeNameDisplay.setTooltip(new Tooltip(yoComposite.getName() + "\n" + yoComposite.getNamespace()));
+      String tooltipText = yoComposite.getName() + "\n" + yoComposite.getNamespace();
+      String description = getYoVariableDescription(yoComposite);
+      if (description != null)
+         tooltipText += "\n\n" + description;
+      yoCompositeNameDisplay.setTooltip(new Tooltip(tooltipText));
+   }
+
+   private static String getYoVariableDescription(YoComposite yoComposite)
+   {
+      // Only single-variable composites have a meaningful YoVariable description.
+      if (yoComposite.getPattern().getComponentIdentifiers() != null || yoComposite.getYoComponents().size() != 1)
+         return null;
+      String description = yoComposite.getYoComponents().get(0).getDescription();
+      if (description == null || description.isBlank())
+         return null;
+      return description;
    }
 
    private void updateYoCompositeName(YoNameDisplay nameDisplay, YoComposite yoComposite)

@@ -847,6 +847,10 @@ public class LogSessionManagerController implements SessionControlsController
       protected String computeValue()
       {
          long nanoTime = observableNanoTime.get();
+         // Display-only fix: at buffer/log position 0 the relative timestamp can come out as a tiny negative value
+         // due to rounding. Clamp such cosmetic negatives to 0 so the UI never shows a slightly-negative time.
+         if (nanoTime < 0 && nanoTime > -TimeUnit.MILLISECONDS.toNanos(1))
+            nanoTime = 0;
          long hours = TimeUnit.NANOSECONDS.toHours(nanoTime);
          long minutes = TimeUnit.NANOSECONDS.toMinutes(nanoTime);
          long seconds = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
