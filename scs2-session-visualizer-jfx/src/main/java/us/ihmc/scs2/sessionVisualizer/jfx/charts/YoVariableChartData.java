@@ -265,17 +265,26 @@ public class YoVariableChartData
       if (bufferProperties.getSize() != dataSet.size)
          return null;
 
+      // Missing data points hold non-finite (NaN) values and must be excluded so they do not poison the bounds.
       int index = bufferProperties.getInPoint();
-      double yCurrent = dataSet.values[index];
-      double yMin = yCurrent;
-      double yMax = yCurrent;
+      double yMin = Double.POSITIVE_INFINITY;
+      double yMax = Double.NEGATIVE_INFINITY;
 
-      for (int i = 1; i < bufferProperties.getActiveBufferLength(); i++)
+      for (int i = 0; i < bufferProperties.getActiveBufferLength(); i++)
       {
+         double yCurrent = dataSet.values[index];
+         if (Double.isFinite(yCurrent))
+         {
+            yMin = Math.min(yMin, yCurrent);
+            yMax = Math.max(yMax, yCurrent);
+         }
          index = SharedMemoryTools.increment(index, 1, bufferProperties.getSize());
-         yCurrent = dataSet.values[index];
-         yMin = Math.min(yMin, yCurrent);
-         yMax = Math.max(yMax, yCurrent);
+      }
+
+      if (yMin > yMax)
+      { // No finite data in the active buffer; fall back to a neutral range.
+         yMin = 0.0;
+         yMax = 0.0;
       }
 
       dataSet.valueMin = yMin;
@@ -309,10 +318,8 @@ public class YoVariableChartData
             y = completeDataSet.values[index];
       }
 
-      // TODO Need to check if chart-fx handles NaN.
-      if (!Double.isFinite(y))
-         y = 0.0;
-
+      // Non-finite (NaN) values are preserved to mark missing data: the renderer dashes the line across
+      // these gaps (issue #118). Bounds computation and stroking both skip/handle non-finite values.
       return y;
    }
 
