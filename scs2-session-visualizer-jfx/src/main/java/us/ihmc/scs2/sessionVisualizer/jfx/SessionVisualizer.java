@@ -128,6 +128,8 @@ public class SessionVisualizer
       StackPane mainPaneWithLights = new StackPane(mainPane);
       mainPaneWithLights.getChildren().add(clonedLightGroup);
       mainPaneWithLights.getStylesheets().setAll(mainPane.getStylesheets());
+      if (SessionPropertiesHelper.loadBooleanPropertyOrEnvironment("scs2.session.gui.darkmode", "SCS2_GUI_DARKMODE", false))
+         mainPaneWithLights.getStylesheets().add(SessionVisualizerIOTools.DARK_STYLESHEET.toExternalForm());
       Scene mainScene = new Scene(mainPaneWithLights);
       toolkit.getSnapshotManager().registerRecordable(mainScene);
       primaryStage.setScene(mainScene);
