@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -191,10 +192,12 @@ public class SessionVisualizer
 
       if (toolkit.hasActiveSession())
       {
-         Alert alert = new Alert(AlertType.CONFIRMATION, "Do you want to save the default configuration?", ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+         Alert alert = new Alert(AlertType.CONFIRMATION, "Would you like to override the default configuration?", ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
          SessionVisualizerIOTools.addSCSIconToDialog(alert);
          alert.initOwner(primaryStage);
          JavaFXMissingTools.centerDialogInOwner(alert);
+         ((Button) alert.getDialogPane().lookupButton(ButtonType.YES)).setDefaultButton(false);
+         ((Button) alert.getDialogPane().lookupButton(ButtonType.NO)).setDefaultButton(true);
 
          Optional<ButtonType> result = alert.showAndWait();
          if (!result.isPresent() || result.get() == ButtonType.CANCEL)
