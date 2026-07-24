@@ -14,6 +14,7 @@ import us.ihmc.scs2.definition.robot.urdf.URDFTools;
 import us.ihmc.scs2.definition.robot.urdf.items.URDFModel;
 import us.ihmc.scs2.definition.visual.ColorDefinitions;
 import us.ihmc.scs2.definition.visual.MaterialDefinition;
+import us.ihmc.scs2.definition.visual.TextureDefinition;
 import us.ihmc.scs2.definition.visual.VisualDefinition;
 import us.ihmc.scs2.definition.terrain.TerrainObjectDefinition;
 import us.ihmc.scs2.definition.yoGraphic.YoGraphicDefinition;
@@ -163,28 +164,61 @@ public class RemoteSession extends Session
    private static void applyRobotMaterialOverride(RobotDefinition robotDefinition)
    {
       String spec = System.getProperty("scs2.remote.robotMaterial");
-      if (spec == null || spec.isBlank())
+      String texPath = System.getProperty("scs2.remote.robotTexture");
+      boolean hasTex = texPath != null && !texPath.isBlank();
+      if ((spec == null || spec.isBlank()) && !hasTex)
          return;
 
       MaterialDefinition material = new MaterialDefinition();
-      material.setSpecularColor(ColorDefinitions.rgb(0x585860)); // brushed-metal sheen
-      material.setShininess(40.0);
 
-      String s = spec.trim().toLowerCase();
-      if (s.equals("black-anodized") || s.equals("anodized"))
+      if (hasTex)
       {
-         material.setDiffuseColor(ColorDefinitions.rgb(0x33343a));
+         // Textured metal: albedo (+ optional normal) map. Requires the robot meshes to carry UV
+         // coordinates (baked triplanar). White diffuse so the map's colours render true.
+         try
+         {
+            material.setDiffuseColor(ColorDefinitions.rgb(0xffffff));
+            material.setDiffuseMap(new TextureDefinition(new File(texPath).toURI().toURL()));
+            String nrm = System.getProperty("scs2.remote.robotNormalMap");
+            if (nrm != null && !nrm.isBlank())
+               material.setNormalMap(new TextureDefinition(new File(nrm).toURI().toURL()));
+            material.setSpecularColor(ColorDefinitions.rgb(0xb4b4b4)); // metallic sheen over the texture
+            material.setShininess(64.0);
+         }
+         catch (Exception e)
+         {
+            LogTools.warn("scs2.remote.robotTexture could not be loaded: " + texPath + " (" + e.getMessage() + ")");
+            return;
+         }
       }
       else
       {
-         try
+         String s = spec.trim().toLowerCase();
+         if (s.equals("black-anodized") || s.equals("anodized"))
          {
-            material.setDiffuseColor(ColorDefinitions.rgb(Integer.parseInt(s.replace("#", ""), 16)));
+            material.setDiffuseColor(ColorDefinitions.rgb(0x1b1d21));  // dark near-black base (anodized)
+            material.setSpecularColor(ColorDefinitions.rgb(0x8a929c)); // cool brushed-metal sheen
+            material.setShininess(75.0);
          }
-         catch (NumberFormatException e)
+         else if (s.equals("gold"))
          {
-            LogTools.warn("scs2.remote.robotMaterial must be 'black-anodized' or a RRGGBB hex color, got: " + spec);
-            return;
+            material.setDiffuseColor(ColorDefinitions.rgb(0xcfa23a));  // rich metallic gold
+            material.setSpecularColor(ColorDefinitions.rgb(0xfff0b0)); // warm bright gold highlight
+            material.setShininess(80.0);
+         }
+         else
+         {
+            try
+            {
+               material.setDiffuseColor(ColorDefinitions.rgb(Integer.parseInt(s.replace("#", ""), 16)));
+               material.setSpecularColor(ColorDefinitions.rgb(0x8a929c));
+               material.setShininess(75.0);
+            }
+            catch (NumberFormatException e)
+            {
+               LogTools.warn("scs2.remote.robotMaterial must be 'black-anodized', 'gold', or a RRGGBB hex color, got: " + spec);
+               return;
+            }
          }
       }
 
