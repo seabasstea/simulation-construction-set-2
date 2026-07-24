@@ -7,10 +7,14 @@ import us.ihmc.robotDataLogger.handshake.LogHandshake;
 import us.ihmc.robotDataLogger.handshake.YoVariableHandshakeParser;
 import us.ihmc.robotDataLogger.util.DebugRegistry;
 import us.ihmc.robotDataLogger.websocket.command.DataServerCommand;
+import us.ihmc.scs2.definition.robot.RigidBodyDefinition;
 import us.ihmc.scs2.definition.robot.RobotDefinition;
 import us.ihmc.scs2.definition.robot.RobotStateDefinition;
 import us.ihmc.scs2.definition.robot.urdf.URDFTools;
 import us.ihmc.scs2.definition.robot.urdf.items.URDFModel;
+import us.ihmc.scs2.definition.visual.ColorDefinitions;
+import us.ihmc.scs2.definition.visual.MaterialDefinition;
+import us.ihmc.scs2.definition.visual.VisualDefinition;
 import us.ihmc.scs2.definition.terrain.TerrainObjectDefinition;
 import us.ihmc.scs2.definition.yoGraphic.YoGraphicDefinition;
 import us.ihmc.scs2.session.Session;
@@ -76,6 +80,7 @@ public class RemoteSession extends Session
                                                       handshake.getResourceZip());
       if (robotDefinition != null)
       {
+         applyRobotMaterialOverride(robotDefinition);
          robotDefinitions.add(robotDefinition);
          Robot robot = new Robot(robotDefinition, getInertialFrame());
          robots.add(robot);
@@ -147,6 +152,52 @@ public class RemoteSession extends Session
                + e.getMessage() + " -- using the server-advertised model instead.");
          return null;
       }
+   }
+
+   /**
+    * Optionally recolors every robot visual, controlled by {@code -Dscs2.remote.robotMaterial}. Accepts
+    * {@code black-anodized} (a dark diffuse with a metallic specular sheen) or a {@code RRGGBB} hex color
+    * (used as the diffuse, with the same metallic specular). No-op when the property is unset. Because it
+    * sets an explicit specular color, it also renders correctly on macOS.
+    */
+   private static void applyRobotMaterialOverride(RobotDefinition robotDefinition)
+   {
+      String spec = System.getProperty("scs2.remote.robotMaterial");
+      if (spec == null || spec.isBlank())
+         return;
+
+      MaterialDefinition material = new MaterialDefinition();
+      material.setSpecularColor(ColorDefinitions.rgb(0x585860)); // brushed-metal sheen
+      material.setShininess(40.0);
+
+      String s = spec.trim().toLowerCase();
+      if (s.equals("black-anodized") || s.equals("anodized"))
+      {
+         material.setDiffuseColor(ColorDefinitions.rgb(0x33343a));
+      }
+      else
+      {
+         try
+         {
+            material.setDiffuseColor(ColorDefinitions.rgb(Integer.parseInt(s.replace("#", ""), 16)));
+         }
+         catch (NumberFormatException e)
+         {
+            LogTools.warn("scs2.remote.robotMaterial must be 'black-anodized' or a RRGGBB hex color, got: " + spec);
+            return;
+         }
+      }
+
+      int count = 0;
+      for (RigidBodyDefinition body : robotDefinition.getAllRigidBodies())
+      {
+         for (VisualDefinition visual : body.getVisualDefinitions())
+         {
+            visual.setMaterialDefinition(new MaterialDefinition(material));
+            count++;
+         }
+      }
+      LogTools.info("Applied robot material override '" + spec + "' to " + count + " visuals.");
    }
 
    public long getDelay()

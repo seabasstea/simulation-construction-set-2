@@ -349,7 +349,11 @@ tasks.register("buildMacDmgPackage") {
       val appVersion = numericParts.joinToString(".")
 
       // Generate the .icns icon from the existing PNG using the macOS iconutil pipeline.
-      val srcPng = "${project.projectDir}/src/main/resources/icons/scs-icon.png"
+      // macOS-styled variant: the logo inset with transparent padding + rounded corners so the app icon
+      // matches native dock icons instead of rendering as a full-bleed square. Falls back to the plain
+      // logo if the macOS variant is absent.
+      val macIcon = File("${project.projectDir}/src/main/resources/icons/scs-icon-macos.png")
+      val srcPng = if (macIcon.exists()) macIcon.absolutePath else "${project.projectDir}/src/main/resources/icons/scs-icon.png"
       val iconsetDir = File("${project.projectDir}/build/scs-icon.iconset")
       iconsetDir.deleteRecursively(); iconsetDir.mkdirs()
       listOf(
