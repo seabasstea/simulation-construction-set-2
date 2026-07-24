@@ -142,6 +142,14 @@ public class YoEntryTabPaneController
       ObservableList<Tab> tabs = yoEntryTabPane.getTabs();
       Tab selectedTab = yoEntryTabPane.getSelectionModel().getSelectedItem();
 
+      // Unbind previous buttons before discarding them: each button's text is bound to its tab
+      // controller's long-lived nameProperty, which would otherwise retain the discarded buttons
+      // (and keep updating them) every time this rebuilds on a tab add/remove/selection change.
+      for (javafx.scene.Node child : tabNavigatorFlowPane.getChildren())
+      {
+         if (child instanceof Button navButton)
+            navButton.textProperty().unbind();
+      }
       tabNavigatorFlowPane.getChildren().clear();
 
       for (Tab tab : tabs)
