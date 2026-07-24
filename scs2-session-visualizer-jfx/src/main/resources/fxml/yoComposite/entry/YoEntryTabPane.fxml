@@ -2,13 +2,22 @@
 
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.VBox?>
 
-<TabPane fx:id="yoEntryTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="ALL_TABS" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="us.ihmc.scs2.sessionVisualizer.jfx.controllers.yoComposite.entry.YoEntryTabPaneController">
-   <tabs>
-      <Tab fx:id="initialTab" closable="false" text="Default">
-         <content>
-            <fx:include fx:id="initialListView" source="YoEntryListView.fxml" />
-         </content>
-      </Tab>
-   </tabs>
-</TabPane>
+<VBox xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="us.ihmc.scs2.sessionVisualizer.jfx.controllers.yoComposite.entry.YoEntryTabPaneController">
+   <children>
+      <!-- Wrapping overview of the variable-entry tabs (upstream issue #168). Purely a navigation aid:
+           the native TabPane header below still owns tab drag-reordering and double-click renaming. -->
+      <FlowPane fx:id="tabNavigatorFlowPane" hgap="2.0" vgap="2.0" managed="false" visible="false" styleClass="entry-tab-navigator" />
+      <TabPane fx:id="yoEntryTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="ALL_TABS" VBox.vgrow="ALWAYS">
+         <tabs>
+            <Tab fx:id="initialTab" closable="false" text="Default">
+               <content>
+                  <fx:include fx:id="initialListView" source="YoEntryListView.fxml" />
+               </content>
+            </Tab>
+         </tabs>
+      </TabPane>
+   </children>
+</VBox>

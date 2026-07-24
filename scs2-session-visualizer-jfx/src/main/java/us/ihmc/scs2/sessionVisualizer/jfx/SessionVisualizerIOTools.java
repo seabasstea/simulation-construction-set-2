@@ -94,6 +94,22 @@ public class SessionVisualizerIOTools
 
    // CSS
    public static final URL GENERAL_STYLESHEET = getCSSResource("GeneralStylesheet");
+   public static final URL DARK_STYLESHEET = getCSSResource("DarkMode");
+
+   public static boolean isDarkModeEnabled()
+   {
+      return us.ihmc.scs2.session.SessionPropertiesHelper.loadBooleanPropertyOrEnvironment("scs2.session.gui.darkmode",
+                                                                                           "SCS2_GUI_DARKMODE",
+                                                                                           false);
+   }
+
+   /** Adds the general stylesheet plus, when dark mode is enabled, the dark overlay (last, so it wins). */
+   public static void addStandardStylesheets(javafx.scene.Parent parent)
+   {
+      parent.getStylesheets().add(GENERAL_STYLESHEET.toExternalForm());
+      if (isDarkModeEnabled())
+         parent.getStylesheets().add(DARK_STYLESHEET.toExternalForm());
+   }
 
    // Icon list:
    public static final Image SCS_ICON_IMAGE = loadIcon("scs-icon.png");

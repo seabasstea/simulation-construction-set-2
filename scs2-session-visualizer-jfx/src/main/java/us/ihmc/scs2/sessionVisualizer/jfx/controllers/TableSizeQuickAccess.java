@@ -54,7 +54,7 @@ public class TableSizeQuickAccess
       clearEmptyButton.getStyleClass().add("chart-table-view-clear-button");
 
       vBox.getChildren().add(new HBox(3.0, clearAllButton, clearEmptyButton));
-      vBox.getStylesheets().add(SessionVisualizerIOTools.GENERAL_STYLESHEET.toExternalForm());
+      SessionVisualizerIOTools.addStandardStylesheets(vBox);
 
       if (title != null)
       {

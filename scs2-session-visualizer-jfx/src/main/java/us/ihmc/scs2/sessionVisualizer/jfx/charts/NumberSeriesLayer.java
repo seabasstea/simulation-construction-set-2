@@ -2,6 +2,7 @@ package us.ihmc.scs2.sessionVisualizer.jfx.charts;
 
 import java.awt.BasicStroke;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.nio.IntBuffer;
@@ -316,13 +317,83 @@ public class NumberSeriesLayer extends ImageView
                                      int[] xData,
                                      int[] yData)
    {
-      for (int i = 0; i < points.size(); i++)
+      int n = points.size();
+      if (n == 0)
+         return;
+
+      // Missing data points are carried as non-finite (NaN) y-values (see YoVariableChartData.getValueAt).
+      // Present-data runs are stroked solid; gaps between them are bridged with a dashed line (issue #118).
+      boolean hasMissingData = false;
+
+      for (int i = 0; i < n; i++)
       {
          Point2D point = points.get(i);
-         xData[i] = (int) Math.round(xTransform.applyAsDouble(point.getX()));
-         yData[i] = (int) Math.round(yTransform.applyAsDouble(point.getY()));
+         if (Double.isFinite(point.getY()))
+         {
+            xData[i] = (int) Math.round(xTransform.applyAsDouble(point.getX()));
+            yData[i] = (int) Math.round(yTransform.applyAsDouble(point.getY()));
+         }
+         else
+         {
+            hasMissingData = true;
+         }
       }
-      graphics.drawPolyline(xData, yData, points.size());
+
+      if (!hasMissingData)
+      { // Fast path: no gaps, stroke the whole series as a single solid polyline.
+         graphics.drawPolyline(xData, yData, n);
+         return;
+      }
+
+      Stroke solidStroke = graphics.getStroke();
+      Stroke dashedStroke = createDashedStroke(solidStroke);
+
+      int runStart = -1; // index of the first present point in the current run, or -1 if not in a run
+      int previousRunEnd = -1; // index of the last present point of the previous run, for gap bridging
+
+      for (int i = 0; i <= n; i++)
+      {
+         boolean present = i < n && Double.isFinite(points.get(i).getY());
+
+         if (present && runStart < 0)
+         { // Entering a new present-data run.
+            runStart = i;
+            if (previousRunEnd >= 0)
+            { // Bridge the missing-data gap with a dashed segment.
+               graphics.setStroke(dashedStroke);
+               graphics.drawLine(xData[previousRunEnd], yData[previousRunEnd], xData[i], yData[i]);
+               graphics.setStroke(solidStroke);
+            }
+         }
+         else if (!present && runStart >= 0)
+         { // Leaving a present-data run: stroke it solid.
+            int count = i - runStart;
+            if (count == 1)
+               graphics.drawLine(xData[runStart], yData[runStart], xData[runStart], yData[runStart]);
+            else
+               graphics.drawPolyline(Arrays.copyOfRange(xData, runStart, i), Arrays.copyOfRange(yData, runStart, i), count);
+            previousRunEnd = i - 1;
+            runStart = -1;
+         }
+      }
+
+      graphics.setStroke(solidStroke);
+   }
+
+   private static Stroke createDashedStroke(Stroke solidStroke)
+   {
+      if (!(solidStroke instanceof BasicStroke))
+         return solidStroke;
+
+      BasicStroke basic = (BasicStroke) solidStroke;
+      float lineWidth = basic.getLineWidth();
+      float dashLength = Math.max(3.0f * lineWidth, 6.0f);
+      return new BasicStroke(lineWidth,
+                             BasicStroke.CAP_BUTT,
+                             basic.getLineJoin(),
+                             basic.getMiterLimit(),
+                             new float[] {dashLength, dashLength},
+                             0.0f);
    }
 
    private static java.awt.Color toAWTColor(Color color)

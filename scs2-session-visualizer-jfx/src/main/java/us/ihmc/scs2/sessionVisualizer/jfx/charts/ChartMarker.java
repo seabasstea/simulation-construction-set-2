@@ -88,8 +88,10 @@ public final class ChartMarker extends Line
 
       setSmooth(false);
       setManaged(false);
-      setCache(true);
-      setCacheHint(CacheHint.SPEED);
+      // Caching a thin line that moves every data tick makes JavaFX regenerate the cache bitmap on each
+      // move, which briefly composites a light/white flash (very visible on a dark background). The line
+      // is cheap to redraw, so skip the cache.
+      setCache(false);
    }
 
    public ChartMarker(ChartMarkerType type, DoubleProperty coordinate)

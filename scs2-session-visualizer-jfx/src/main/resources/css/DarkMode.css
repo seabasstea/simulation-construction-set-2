@@ -1,0 +1,68 @@
+/*
+ * Dark theme overlay. Layered on top of Modena + GeneralStylesheet (added last so it wins).
+ * Most controls recolor automatically because Modena derives their colors from these looked-up
+ * colors on .root; the rest are SCS2-specific fixups (light greys, hardcoded-black glyph icons).
+ */
+.root {
+    -fx-base: #2f3238;
+    -fx-background: #26282c;
+    -fx-control-inner-background: #34373d;
+    -fx-control-inner-background-alt: #3a3e45;
+    -fx-accent: #4a78c0;
+    -fx-focus-color: #5a86c8;
+    -fx-faint-focus-color: #5a86c822;
+    -fx-default-button: #3a5f9e;
+    -fx-text-fill: #e6e6e6;
+    -fx-text-background-color: #e8e8e8;
+    -fx-mid-text-color: #d0d0d0;
+    -fx-selection-bar: #4a78c0;
+    -fx-selection-bar-non-focused: #4a4d55;
+
+    /* SCS2 custom vars that were tuned for a light UI */
+    -default-grey: #3a3e45;
+}
+
+/* Panels/anchor panes that may paint a hardcoded light background */
+.split-pane, .anchor-pane, .tab-pane, .scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: -fx-background;
+}
+
+/* fontawesome/ikonli glyph icons that were filled black become invisible on dark; lighten them */
+.glyph-icon, .ikonli-font-icon, Text {
+    -fx-fill: #dcdcdc;
+}
+
+/* menu bar + menus */
+.menu-bar { -fx-background-color: -fx-base; }
+.menu-bar .label { -fx-text-fill: #e6e6e6; }
+
+/* text fields / spinners: readable text on dark inner background */
+.text-field, .text-area, .spinner .text-field {
+    -fx-text-fill: #e8e8e8;
+    -fx-prompt-text-fill: #9aa0a8;
+}
+
+/* table / list / tree readable rows */
+.table-view, .tree-view, .list-view { -fx-background-color: -fx-control-inner-background; }
+.table-row-cell:odd, .list-cell:odd { -fx-control-inner-background: -fx-control-inner-background-alt; }
+
+/* Chart markers: the current-index marker was black (invisible on dark); make it a visible amber.
+   Origin marker lightened; in/out keep their green/red. */
+.chart-current-index-marker { -fx-stroke: #ffcf4a; }
+.chart-origin-marker { -fx-stroke: #6a6f78; }
+
+/* JFoenix controls (they ship their own light-tuned CSS and ignore Modena's base colours) */
+.jfx-text-field, .jfx-password-field {
+    -fx-text-fill: #e8e8e8;
+    -fx-prompt-text-fill: #99a0a8;
+    -jfx-focus-color: #5a86c8;
+    -jfx-unfocus-color: #6a6f78;
+}
+.text-field, .spinner .text-field {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-text-fill: #e8e8e8;
+}
+.jfx-combo-box, .jfx-combo-box .list-cell { -fx-text-fill: #e8e8e8; }
+.jfx-list-view, .jfx-tree-table-view { -fx-background-color: -fx-control-inner-background; }
+.jfx-button { -fx-text-fill: #e8e8e8; }
+.jfx-spinner .arc { -fx-stroke: #5a86c8; }

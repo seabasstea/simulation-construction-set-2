@@ -102,7 +102,7 @@ public class RemoteSessionManagerController implements SessionControlsController
       this.backgroundExecutorManager = toolkit.getBackgroundExecutorManager();
       client = new YoVariableClient(sessionFactory);
 
-      mainPane.getStylesheets().add(SessionVisualizerIOTools.GENERAL_STYLESHEET.toExternalForm());
+      SessionVisualizerIOTools.addStandardStylesheets(mainPane);
 
       TreeTableColumn<SessionInfo, String> hostColumn = createColumn("Host", 150.0, 100.0, 200.0, SessionInfo::getHost);
       TreeTableColumn<SessionInfo, String> portColumn = createColumn("Port", 80.0, SessionInfo::getPort);

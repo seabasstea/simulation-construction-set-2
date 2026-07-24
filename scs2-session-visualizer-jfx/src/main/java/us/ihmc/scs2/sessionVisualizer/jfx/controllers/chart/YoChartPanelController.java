@@ -650,7 +650,16 @@ public class YoChartPanelController extends ObservedAnimationTimer implements Vi
          return -1;
       FastAxisBase xAxis = dynamicLineChart.getXAxis();
       double xLocal = xAxis.screenToLocal(screenX, screenY).getX();
-      int index = (int) Math.round(xAxis.getValueForDisplay(xLocal));
+      // Map the local pixel position to a buffer index using the currently VISIBLE (zoomed) range,
+      // computed directly from the axis bounds and width. This mirrors how the series data is actually
+      // rendered (see NumberSeriesLayer#xToHorizontalDisplayTransform) and avoids the axis' cached
+      // display scale (getValueForDisplay), which only refreshes on a layout pass and therefore lags
+      // behind zoom/bound changes - causing the scrub cursor to jump by large amounts when zoomed in.
+      double lowerBound = xAxis.getLowerBound();
+      double upperBound = xAxis.getUpperBound();
+      double width = xAxis.getWidth();
+      double value = width <= 0.0 ? lowerBound : lowerBound + xLocal * (upperBound - lowerBound) / width;
+      int index = (int) Math.round(value);
       return MathTools.clamp(index, 0, lastBufferProperties.getSize() - 1);
    }
 

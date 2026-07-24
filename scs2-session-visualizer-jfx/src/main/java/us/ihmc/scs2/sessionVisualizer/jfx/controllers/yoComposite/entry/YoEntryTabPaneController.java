@@ -5,10 +5,12 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.FlowPane;
 import javafx.stage.Window;
 import org.kordamp.ikonli.javafx.FontIcon;
 import us.ihmc.log.LogTools;
@@ -37,8 +39,18 @@ import java.util.function.Function;
 
 public class YoEntryTabPaneController
 {
+   /**
+    * The native {@link TabPane} header cannot wrap onto multiple rows, so once there are more than a
+    * handful of variable-entry tabs they overflow horizontally and become hard to reach without widening
+    * the window (upstream issue #168). Above this many tabs we reveal a wrapping navigator bar that shows
+    * every tab name at a glance and lets the user jump straight to any tab.
+    */
+   private static final int MIN_TABS_TO_SHOW_NAVIGATOR = 3;
+
    @FXML
    private TabPane yoEntryTabPane;
+   @FXML
+   private FlowPane tabNavigatorFlowPane;
    @FXML
    private Tab initialTab;
    @FXML
@@ -110,6 +122,57 @@ public class YoEntryTabPaneController
             yoEntryTabPane.getTabs().clear();
       });
       messager.addFXTopicListener(topics.getYoEntryListAdd(), this::addYoEntryList);
+
+      // Keep the wrapping tab navigator (issue #168) in sync with the tabs and the current selection.
+      yoEntryTabPane.getTabs().addListener((ListChangeListener<Tab>) change -> refreshTabNavigator());
+      yoEntryTabPane.getSelectionModel().selectedItemProperty().addListener((o, oldValue, newValue) -> refreshTabNavigator());
+      refreshTabNavigator();
+   }
+
+   /**
+    * Rebuilds the wrapping tab-navigator bar (issue #168). It is shown only once there are enough tabs to
+    * overflow the native header, and offers one button per tab (wrapping onto as many rows as needed) that
+    * selects the corresponding tab. Tab reordering and renaming remain handled by the native TabPane header.
+    */
+   private void refreshTabNavigator()
+   {
+      if (tabNavigatorFlowPane == null)
+         return;
+
+      ObservableList<Tab> tabs = yoEntryTabPane.getTabs();
+      Tab selectedTab = yoEntryTabPane.getSelectionModel().getSelectedItem();
+
+      // Unbind previous buttons before discarding them: each button's text is bound to its tab
+      // controller's long-lived nameProperty, which would otherwise retain the discarded buttons
+      // (and keep updating them) every time this rebuilds on a tab add/remove/selection change.
+      for (javafx.scene.Node child : tabNavigatorFlowPane.getChildren())
+      {
+         if (child instanceof Button navButton)
+            navButton.textProperty().unbind();
+      }
+      tabNavigatorFlowPane.getChildren().clear();
+
+      for (Tab tab : tabs)
+      {
+         Button navButton = new Button();
+         navButton.getStyleClass().add("entry-tab-navigator-button");
+
+         YoEntryListViewController controller = tabToControllerMap.get(tab);
+         if (controller != null)
+            navButton.textProperty().bind(controller.nameProperty());
+         else
+            navButton.setText(tab.getText());
+
+         if (tab == selectedTab)
+            navButton.getStyleClass().add("entry-tab-navigator-button-selected");
+
+         navButton.setOnAction(e -> yoEntryTabPane.getSelectionModel().select(tab));
+         tabNavigatorFlowPane.getChildren().add(navButton);
+      }
+
+      boolean show = tabs.size() >= MIN_TABS_TO_SHOW_NAVIGATOR;
+      tabNavigatorFlowPane.setVisible(show);
+      tabNavigatorFlowPane.setManaged(show);
    }
 
    public void setInput(YoEntryConfigurationDefinition input)
