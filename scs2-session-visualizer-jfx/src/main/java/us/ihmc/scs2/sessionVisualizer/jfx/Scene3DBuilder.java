@@ -8,6 +8,7 @@ import javafx.scene.paint.Color;
 import us.ihmc.log.LogTools;
 import us.ihmc.scs2.definition.visual.ColorDefinition;
 import us.ihmc.scs2.definition.visual.VisualDefinitionFactory;
+import us.ihmc.scs2.session.SessionPropertiesHelper;
 import us.ihmc.scs2.sessionVisualizer.jfx.definition.JavaFXVisualTools;
 
 import java.util.Collections;
@@ -103,8 +104,10 @@ public class Scene3DBuilder
     */
    public void addDefaultLighting()
    {
-      double ambientValue = 0.7;
-      double pointValue = 0.2;
+      // Defaults reproduce the original flat, even lighting. Override via system properties for more
+      // form-revealing shading (dark/anodized robots read as a flat silhouette under high ambient).
+      double ambientValue = SessionPropertiesHelper.loadDoubleProperty("scs2.session.gui.light.ambient", 0.7);
+      double pointValue = SessionPropertiesHelper.loadDoubleProperty("scs2.session.gui.light.point", 0.2);
       double pointDistance = 1000.0;
       Color ambientColor = Color.color(ambientValue, ambientValue, ambientValue);
       addNodeToView(new AmbientLight(ambientColor));
@@ -113,6 +116,27 @@ public class Scene3DBuilder
       addPointLight(-pointDistance, pointDistance, pointDistance, indoorColor);
       addPointLight(-pointDistance, -pointDistance, pointDistance, indoorColor);
       addPointLight(pointDistance, -pointDistance, pointDistance, indoorColor);
+
+      // Optional directional key light (off by default): one brighter light from a chosen side creates a
+      // bright->dark gradient and sweeping speculars that separate individual parts. Direction is a vector;
+      // intensity is the grey level of the light colour (clamped to white).
+      double keyValue = SessionPropertiesHelper.loadDoubleProperty("scs2.session.gui.light.key", 0.0);
+      if (keyValue > 0.0)
+      {
+         double kx = SessionPropertiesHelper.loadDoubleProperty("scs2.session.gui.light.keyx", 1.0);
+         double ky = SessionPropertiesHelper.loadDoubleProperty("scs2.session.gui.light.keyy", 0.5);
+         double kz = SessionPropertiesHelper.loadDoubleProperty("scs2.session.gui.light.keyz", 0.8);
+         double lx = kx * pointDistance, ly = ky * pointDistance, lz = kz * pointDistance;
+         // A single PointLight caps at white; stack lights from the same direction so key > 1 gives a
+         // genuinely brighter sun (each unit adds one full white light, the remainder a partial one).
+         double remaining = keyValue;
+         while (remaining > 0.0)
+         {
+            double c = Math.min(1.0, remaining);
+            addPointLight(lx, ly, lz, Color.color(c, c, c));
+            remaining -= 1.0;
+         }
+      }
    }
 
    /**
