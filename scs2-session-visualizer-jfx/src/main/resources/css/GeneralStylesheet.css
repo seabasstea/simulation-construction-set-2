@@ -759,3 +759,31 @@
     -fx-max-height: 4;
     -fx-padding: 0 4 0 4;
 }
+
+/*******************************************************************************
+ *                                                                             *
+ * YoEntry tab navigator (issue #168)                                          *
+ *                                                                             *
+ * Wrapping overview bar shown above the variable-entry TabPane when there are  *
+ * enough tabs to overflow the native (single-row) header.                      *
+ ******************************************************************************/
+
+.entry-tab-navigator {
+    -fx-padding: 2 3 2 3;
+    -fx-background-color: derive(-fx-base, -3%);
+    -fx-border-color: transparent transparent -default-grey transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.entry-tab-navigator-button {
+    -fx-font-size: 10px;
+    -fx-padding: 1 6 1 6;
+    -fx-background-radius: 3;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.entry-tab-navigator-button-selected {
+    -fx-background-color: -default-pale-dark-blue;
+    -fx-text-fill: white;
+}
